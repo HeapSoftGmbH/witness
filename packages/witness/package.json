@@ -1,0 +1,6 @@
+{
+	"name": "witness",
+	"module": "index.ts",
+	"type": "module",
+	"types": "index.ts"
+}

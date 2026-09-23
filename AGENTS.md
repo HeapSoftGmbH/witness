@@ -1,0 +1,51 @@
+# AGENTS.md
+
+Working on **witness** — token & cost tracking for AI coding agents. Read [README.md](README.md) for the product goal.
+
+## Repo layout
+
+Bun workspaces monorepo:
+
+- `packages/witness` — core. `Session` class: appends turn records, loads repo totals from history. **Harness-agnostic — no imports from any agent SDK here.**
+- `packages/types` — `Usage`, `Tool`, `AgentTurnRecord` interfaces. Shared by core and all adapters.
+- `apps/witness-pi` — pi extension (`extensions/index.ts`). Maps pi events → `Session`.
+- `apps/witness-claude`, `apps/witness-copilot`, `apps/witness-opencode` — placeholders. Goal: same-core adapters for other harnesses.
+- `apps/local-web` — local viewer.
+
+Shared types: `packages/witness` re-exports `AgentTurnRecord`, `Tool`, `Usage` from `packages/types`, so any app/workspace with the `"witness": "workspace:*"` dependency can `import type { ... } from "witness"` — no local type copies.
+
+## Commands
+
+```bash
+bun install
+bun test
+bun run lint        # biome check .
+bun run lint:fix
+```
+
+## Data contract (do not break)
+
+`.witness/usage.jsonl` — one `AgentTurnRecord` JSON per agent burst, append-only, shared by all harnesses:
+
+- Short keys (`t`, `sid`, `sn`, `h`, `mod`, `rep`, `ti`, `tools`, `totalUsage`) are **frozen**. New fields may be added; existing keys are never renamed or removed.
+- Storage: `<git-root>/.witness/usage.jsonl`, override via `WITNESS_DIR`. Repo identity = git remote URL (fallback: git root, then cwd). The pi adapter redirects to `~/.pi/witness/<repo-key>/` via the `perRepo` option — key = `repoDirName(rep)` from core; `WITNESS_DIR` then acts as the data root parent.
+- Old/unknown lines must keep parsing — `loadHistory` skips malformed lines and lines from other repos; keep that behavior.
+- Buffer turns in memory, flush once on idle (`agent_settled`-equivalent) and shutdown. One `appendFileSync` per burst — concurrent agent sessions on the same repo stay safe. Trade-off: hard kill loses the unflushed burst.
+
+## Adding a harness adapter
+
+1. New `apps/witness-<harness>` package, `"witness": "workspace:*"` dependency. Import shared types from `witness` (re-exported from `packages/types`).
+2. On session start: `new Session({ sessionId, harness: "<name>" })`.
+3. Map the harness's turn-end/usage events to `session.addTurn({ index, tools, totalUsage })` — tool results often carry their own usage; sum assistant + tool usage into `totalUsage`.
+4. Flush on idle and shutdown.
+5. Keep the adapter thin — all storage logic lives in `packages/witness`. If an adapter needs new core behavior, add it to core so every harness gets it.
+
+## UI conventions (apps/local-web)
+
+- Use shadcn-svelte components whenever possible. Do not build custom components unless explicitly told to.
+
+## Conventions
+
+- TypeScript strict, Biome (tabs, double quotes, sorted imports).
+- Don't classify tool names at write time — store raw names, derive at report time (naming conventions differ per harness).
+- No new dependencies unless truly needed; core is stdlib-only.

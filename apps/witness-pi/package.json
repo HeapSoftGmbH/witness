@@ -1,0 +1,25 @@
+{
+	"name": "witness-pi",
+	"module": "extensions/index.ts",
+	"keywords": [
+		"witness-pi"
+	],
+	"type": "module",
+	"private": true,
+	"devDependencies": {
+		"@types/bun": "catalog:"
+	},
+	"peerDependencies": {
+		"typescript": "catalog:"
+	},
+	"dependencies": {
+		"@earendil-works/pi-coding-agent": "^0.85.1",
+		"local-web": "workspace:*",
+		"witness": "workspace:*"
+	},
+	"pi": {
+		"extensions": [
+			"./extensions"
+		]
+	}
+}
