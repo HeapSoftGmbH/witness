@@ -9,15 +9,14 @@
 	import { records } from '$lib/stores/records.svelte.ts';
 	import { compactNumberFormatter, getModelFromSourceString } from '$lib/utils';
 
-	// ISO date "YYYY-MM-DD" → "Apr 14"
+	// ISO date "YYYY-MM-DD" → "Apr 14" for x axis label
 	const formatDay = (d: string) =>
 		new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
-	// ISO date "YYYY-MM-DD" → "4/14/2025" (timeZone UTC: keep the UTC wall-clock day, no local shift)
+	// ISO date "YYYY-MM-DD" → "4/14/2025" for tooltip (timeZone UTC: keep the UTC wall-clock day, no local shift)
 	const formatDate = (iso: string) =>
 		new Date(iso).toLocaleDateString('en-US', { timeZone: 'UTC' });
 
-	// metric: how to sum one record; format: how to render its totals
 	let { value, format }: { value: (r: AgentTurnRecord) => number; format: (n: number) => string } =
 		$props();
 
