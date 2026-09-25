@@ -14,21 +14,19 @@
     },
     "apps/witness-pi": {
       "name": "witness-pi",
-      "dependencies": {
-        "@earendil-works/pi-coding-agent": "^0.85.1",
+      "version": "0.0.1",
+      "devDependencies": {
+        "@types/bun": "^1.4.2",
         "lib": "workspace:*",
-        "local-web": "workspace:*",
         "witness": "workspace:*",
       },
-      "devDependencies": {
-        "@types/bun": "catalog:",
-      },
       "peerDependencies": {
-        "typescript": "catalog:",
+        "@earendil-works/pi-coding-agent": "*",
       },
     },
     "packages/lib": {
       "name": "lib",
+      "version": "0.0.1",
     },
     "packages/local-web": {
       "name": "local-web",
@@ -81,6 +79,7 @@
     },
     "packages/witness": {
       "name": "witness",
+      "version": "0.0.1",
     },
   },
   "catalog": {
