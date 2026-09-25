@@ -1,13 +1,14 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
-	import { records } from '$lib/stores/records.svelte.ts';
-	import { totalCost, totalTokens } from '$lib/usage';
 	import {
 		compactNumberFormatter,
 		dollarNumberFormatter,
-		dollarNumberFormatterWith4Fracts,
-		getModelFromSourceString
-	} from '$lib/utils';
+		dollarNumberFormatterWith4Fracts
+	} from 'lib';
+
+	import * as Card from '$lib/components/ui/card/index.js';
+	import { records } from '$lib/stores/records.svelte.ts';
+	import { totalCost, totalTokens } from '$lib/usage';
+	import { getModelFromSourceString } from '$lib/utils';
 
 	import { ModelUsageChart, NameCountChart } from './components';
 

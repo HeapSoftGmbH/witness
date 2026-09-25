@@ -2,12 +2,13 @@
 	import { scaleLinear, scalePoint } from 'd3-scale';
 	import { curveMonotoneX } from 'd3-shape';
 	import { AreaChart, Tooltip, defaultChartPadding } from 'layerchart';
+	import { compactNumberFormatter } from 'lib';
 	import { SvelteDate } from 'svelte/reactivity';
 	import type { AgentTurnRecord } from 'witness';
 
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import { records } from '$lib/stores/records.svelte.ts';
-	import { compactNumberFormatter, getModelFromSourceString } from '$lib/utils';
+	import { getModelFromSourceString } from '$lib/utils';
 
 	// ISO date "YYYY-MM-DD" → "Apr 14" for x axis label
 	const formatDay = (d: string) =>

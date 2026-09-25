@@ -7,6 +7,7 @@ import type {
 	ExtensionAPI,
 	ExtensionContext,
 } from "@earendil-works/pi-coding-agent";
+import { compactNumberFormatter, dollarNumberFormatter } from "lib";
 import { Session, type Tool, type Usage } from "witness";
 
 const PORT = 4444;
@@ -15,7 +16,6 @@ export default function main(pi: ExtensionAPI) {
 	let session: Session;
 	let ctx: ExtensionContext;
 	let server: Server | undefined;
-	const fmt = new Intl.NumberFormat("en", { notation: "compact" });
 
 	function toUsage(u?: {
 		input?: number;
@@ -42,7 +42,7 @@ export default function main(pi: ExtensionAPI) {
 			"witness",
 			ctx.ui.theme.fg(
 				"dim",
-				`💰 $${session.totalCost.toFixed(2)} · ${fmt.format(session.totalTokens)} tok (repo)`,
+				`💰 Witnessed: ${dollarNumberFormatter.format(session.totalCost)} · ${compactNumberFormatter.format(session.totalTokens)} TOK`,
 			),
 		);
 	}

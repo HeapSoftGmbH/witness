@@ -58,6 +58,7 @@
 		"@tanstack/svelte-table": "^9.2.4",
 		"d3-scale": "^4.0.2",
 		"d3-shape": "^3.2.0",
+		"lib": "workspace:*",
 		"mode-watcher": "^1.1.0",
 		"witness": "workspace:*"
 	}

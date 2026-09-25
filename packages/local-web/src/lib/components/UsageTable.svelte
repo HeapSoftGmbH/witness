@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { compactNumberFormatter, dollarNumberFormatterWith4Fracts } from 'lib';
+
 	import ArrowDown from '@lucide/svelte/icons/arrow-down';
 	import ArrowUp from '@lucide/svelte/icons/arrow-up';
 	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
@@ -33,7 +35,7 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
 	import { records } from '$lib/stores/records.svelte.ts';
 	import { totalCost, totalSkillCount, totalTokens, totalToolCount } from '$lib/usage';
-	import { cn, compactNumberFormatter, dollarNumberFormatterWith4Fracts } from '$lib/utils.js';
+	import { cn } from '$lib/utils.js';
 
 	type UsageRow = {
 		t: string;

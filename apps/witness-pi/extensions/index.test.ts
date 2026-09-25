@@ -77,7 +77,7 @@ describe("witness-pi adapter", () => {
 		const { status, emit } = setup({ provider: "anthropic", name: "claude" });
 
 		await emit("session_start", { reason: "user" });
-		expect(status[0]).toBe("witness:💰 $0.00 · 0 tok (repo)");
+		expect(status[0]).toBe("witness:💰 Witnessed: $0.00 · 0 TOK");
 
 		await emit("session_info_changed", { name: "renamed" });
 		await emit("agent_start", {});
@@ -109,7 +109,7 @@ describe("witness-pi adapter", () => {
 		});
 		await emit("agent_settled");
 
-		expect(status.at(-1)).toBe("witness:💰 $0.12 · 165 tok (repo)");
+		expect(status.at(-1)).toBe("witness:💰 Witnessed: $0.12 · 165 TOK");
 		const recs = record();
 		expect(recs).toHaveLength(1);
 		const rec = recs[0];
@@ -211,12 +211,12 @@ describe("witness-pi adapter", () => {
 		await emit("turn_end", {
 			message: { role: "assistant", usage: { totalTokens: 1500 } },
 		});
-		expect(status.at(-1)).toBe("witness:💰 $0.00 · 1.5K tok (repo)");
+		expect(status.at(-1)).toBe("witness:💰 Witnessed: $0.00 · 1.5K TOK");
 
 		await emit("turn_end", {
 			message: { role: "assistant", usage: { totalTokens: 1500000 } },
 		});
-		expect(status.at(-1)).toBe("witness:💰 $0.00 · 1.5M tok (repo)");
+		expect(status.at(-1)).toBe("witness:💰 Witnessed: $0.00 · 1.5M TOK");
 	});
 
 	describe("skill tracking", () => {
