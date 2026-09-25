@@ -21,7 +21,8 @@
 	"scripts": {
 		"build": "bun build",
 		"build:web": "bun run --cwd packages/local-web build",
-		"test": "bun test",
+		"test:extensions": "bun test packages/witness apps/witness-pi",
+		"test:web": "bun run --cwd packages/local-web test",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
 		"format": "biome format --write ."

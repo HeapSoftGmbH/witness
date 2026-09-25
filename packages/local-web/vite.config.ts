@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
-import { defineConfig } from 'vite';
+import { defineConfig } from 'vitest/config';
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
@@ -69,8 +69,15 @@ export default defineConfig({
 	base: './',
 	plugins: [usageApi(__dirname), tailwindcss(), svelte()],
 	resolve: {
+		conditions: process.env.VITEST ? ['browser'] : undefined,
 		alias: {
 			$lib: path.resolve('./src/lib')
 		}
+	},
+	test: {
+		environment: 'jsdom',
+		include: ['src/**/*.test.ts'],
+		exclude: ['**/node_modules/**', 'src/lib/components/ui/**'],
+		setupFiles: ['./src/test/setup.ts']
 	}
 });

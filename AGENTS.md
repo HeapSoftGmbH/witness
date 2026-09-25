@@ -40,9 +40,16 @@ bun run lint:fix
 4. Flush on idle and shutdown.
 5. Keep the adapter thin — all storage logic lives in `packages/witness`. If an adapter needs new core behavior, add it to core so every harness gets it.
 
-## UI conventions (apps/local-web)
+## UI conventions (packages/local-web)
 
 - Use shadcn-svelte components whenever possible. Do not build custom components unless explicitly told to.
+
+## Testing (packages/local-web)
+
+- `packages/local-web` uses **vitest** (`bun run test:web` from the repo root, or `bun run --cwd packages/local-web test`), not `bun test` — root `bun test` only runs `packages/witness` and `apps/witness-pi` (bun can't run `.svelte` tests).
+- **Never write tests for `src/lib/components/ui`** — vendored shadcn-svelte, not ours. It's excluded in the vitest config (`test.exclude`).
+- Tests colocate as `*.test.ts` next to the code. Pure logic = plain vitest; Svelte components = `mount` from `svelte` + jsdom.
+- Component tests that assert chart content after mount must wait a tick — charts draw after the stubbed ResizeObserver reports a size.
 
 ## Conventions
 
