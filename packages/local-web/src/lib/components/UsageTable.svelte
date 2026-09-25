@@ -35,7 +35,7 @@
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
 	import { records } from '$lib/stores/records.svelte.ts';
 	import { totalCost, totalSkillCount, totalTokens, totalToolCount } from '$lib/usage';
-	import { cn } from '$lib/utils.js';
+	import { cn, getModelFromSourceString, getProviderFromSourceString } from '$lib/utils.js';
 
 	type UsageRow = {
 		t: string;
@@ -91,24 +91,18 @@
 			filterFn: 'includesString'
 		}),
 		columnHelper.accessor('mod', { header: 'Model', enableSorting: false }),
-		columnHelper.accessor((row) => row.mod.split('/')[0], {
+		columnHelper.accessor((row) => getProviderFromSourceString(row.mod), {
 			id: 'provider',
 			enableSorting: false,
 			enableGrouping: false,
 			filterFn: 'includesString'
 		}),
-		columnHelper.accessor(
-			(row) => {
-				const i = row.mod.indexOf('/');
-				return i === -1 ? '' : row.mod.slice(i + 1);
-			},
-			{
-				id: 'model',
-				enableSorting: false,
-				enableGrouping: false,
-				filterFn: 'includesString'
-			}
-		),
+		columnHelper.accessor((row) => getModelFromSourceString(row.mod), {
+			id: 'model',
+			enableSorting: false,
+			enableGrouping: false,
+			filterFn: 'includesString'
+		}),
 		columnHelper.accessor('turns', { header: 'Turns', aggregationFn: 'sum' }),
 		columnHelper.accessor('tools', { header: 'Tools', aggregationFn: 'sum' }),
 		columnHelper.accessor('skills', { header: 'Skills', aggregationFn: 'sum' }),

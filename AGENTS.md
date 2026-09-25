@@ -6,13 +6,12 @@ Working on **witness** — token & cost tracking for AI coding agents. Read [REA
 
 Bun workspaces monorepo:
 
-- `packages/witness` — core. `Session` class: appends turn records, loads repo totals from history. **Harness-agnostic — no imports from any agent SDK here.**
-- `packages/types` — `Usage`, `Tool`, `AgentTurnRecord` interfaces. Shared by core and all adapters.
+- `packages/witness` — core. `Session` class: appends turn records, loads repo totals from history. **Harness-agnostic — no imports from any agent SDK here.** Owns the shared `Usage`, `Tool`, `AgentTurnRecord` types.
 - `apps/witness-pi` — pi extension (`extensions/index.ts`). Maps pi events → `Session`.
 - `apps/witness-claude`, `apps/witness-copilot`, `apps/witness-opencode` — placeholders. Goal: same-core adapters for other harnesses.
 - `apps/local-web` — local viewer.
 
-Shared types: `packages/witness` re-exports `AgentTurnRecord`, `Tool`, `Usage` from `packages/types`, so any app/workspace with the `"witness": "workspace:*"` dependency can `import type { ... } from "witness"` — no local type copies.
+Shared types: `packages/witness` defines and re-exports `AgentTurnRecord`, `Tool`, `Usage`, so any app/workspace with the `"witness": "workspace:*"` dependency can `import type { ... } from "witness"` — no local type copies.
 
 ## Commands
 

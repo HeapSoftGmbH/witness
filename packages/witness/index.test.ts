@@ -8,8 +8,7 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { AgentTurnRecord, Usage } from "../types";
-import { Session } from "./index";
+import { type AgentTurnRecord, Session, type Usage } from "./index";
 
 const usage = (tok: number, cst: number): Usage => ({
 	in: 0,

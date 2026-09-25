@@ -15,3 +15,7 @@ export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
 export function getModelFromSourceString(providerModel: string): string {
 	return providerModel.split('/').pop() ?? providerModel;
 }
+
+export function getProviderFromSourceString(providerModel: string): string {
+	return providerModel.split('/')[0] ?? '';
+}

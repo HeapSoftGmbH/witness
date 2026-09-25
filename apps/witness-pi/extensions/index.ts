@@ -203,7 +203,6 @@ export default function main(pi: ExtensionAPI) {
 			} else {
 				c.ui.notify(`witness: http://localhost:${PORT}`, "info");
 			}
-			c.ui.notify(`witness: http://localhost:${PORT}`, "info");
 		},
 	});
 
