@@ -15,19 +15,16 @@ export function repoDirName(rep: string): string {
 }
 
 export class Session {
-	public readonly sessionId: string = "";
 	public sessionName: string = "";
-
-	private readonly harness: string = "";
-
-	private currentAgentTurn?: AgentTurnRecord;
-
-	private lastModel: string = "";
-
-	private metadata: Record<string, unknown> = {};
-	private skills: string[] = [];
 	public totalTokens: number = 0;
 	public totalCost: number = 0;
+	public readonly sessionId: string = "";
+
+	private lastModel: string = "";
+	private currentAgentTurn?: AgentTurnRecord;
+	private metadata: Record<string, unknown> = {};
+	private skills: string[] = [];
+	private readonly harness: string = "";
 	private readonly path: string;
 	private readonly fileName: string;
 	private readonly rep: string;
@@ -35,20 +32,17 @@ export class Session {
 	constructor({
 		sessionId,
 		harness,
-		path,
-		perRepo = false,
 	}: {
 		sessionId: string;
 		harness: string;
-		path?: string;
-		perRepo?: boolean;
 	}) {
 		this.sessionId = sessionId;
 		this.harness = harness;
+
 		const root = this.gitRoot();
 		this.rep = this.gitRemote() ?? root;
-		const base = path ?? process.env.WITNESS_DIR ?? join(root, ".witness");
-		this.path = perRepo ? join(base, repoDirName(this.rep)) : base;
+
+		this.path = join(root, ".witness");
 		this.fileName = "usage.jsonl";
 		mkdirSync(this.path, { recursive: true });
 		this.loadHistory();
@@ -87,7 +81,6 @@ export class Session {
 			if (!line.trim()) continue;
 			try {
 				const rec = JSON.parse(line);
-				if (rec?.rep && rec.rep !== this.rep) continue;
 				records.push(rec);
 			} catch {
 				// skip malformed line
@@ -144,15 +137,13 @@ export class Session {
 		this.totalTokens += totalUsage.tok;
 		this.totalCost += totalUsage.cst;
 
-		// A retry/compaction turn can arrive after agent_settled already
-		// flushed the burst. Never drop it: auto-start a record so every
-		// attempt persists on disk.
 		if (!this.currentAgentTurn) {
 			this.startAgent({
 				dateTimeISOString: new Date().toISOString(),
 				model: this.lastModel,
 			});
 		}
+
 		this.currentAgentTurn?.turns.push({ ti: index || 0, tools, totalUsage });
 	}
 

@@ -44,31 +44,23 @@ function setup(model?: { provider: string; name: string }) {
 }
 
 const record = (): AgentTurnRecord[] =>
-	readFileSync(join(dir, "usage.jsonl"), "utf8")
+	readFileSync(join(cwd, ".witness", "usage.jsonl"), "utf8")
 		.trim()
 		.split("\n")
 		.map((l) => JSON.parse(l) as AgentTurnRecord);
 
-let dir: string;
 let cwd: string;
 let prevCwd: string;
-let prevEnv: string | undefined;
 
 beforeEach(() => {
-	dir = mkdtempSync(join(tmpdir(), "witness-pi-"));
 	cwd = mkdtempSync(join(tmpdir(), "witness-pi-cwd-"));
 	prevCwd = process.cwd();
-	prevEnv = process.env.WITNESS_DIR;
-	process.env.WITNESS_DIR = dir;
 	process.chdir(cwd);
 	cwd = process.cwd();
 });
 
 afterEach(() => {
 	process.chdir(prevCwd);
-	if (prevEnv === undefined) delete process.env.WITNESS_DIR;
-	else process.env.WITNESS_DIR = prevEnv;
-	rmSync(dir, { recursive: true, force: true });
 	rmSync(cwd, { recursive: true, force: true });
 });
 

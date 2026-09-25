@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	mkdirSync,
+	mkdtempSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AgentTurnRecord, Usage } from "../types";
@@ -15,31 +21,25 @@ const usage = (tok: number, cst: number): Usage => ({
 	cst,
 });
 
-let dir: string;
+const witnessFile = () => join(cwd, ".witness", "usage.jsonl");
+
 let cwd: string;
 let prevCwd: string;
-let prevEnv: string | undefined;
 
 beforeEach(() => {
-	dir = mkdtempSync(join(tmpdir(), "witness-data-"));
 	cwd = mkdtempSync(join(tmpdir(), "witness-cwd-"));
 	prevCwd = process.cwd();
-	prevEnv = process.env.WITNESS_DIR;
-	delete process.env.WITNESS_DIR;
 	process.chdir(cwd);
 	cwd = process.cwd();
 });
 
 afterEach(() => {
 	process.chdir(prevCwd);
-	if (prevEnv === undefined) delete process.env.WITNESS_DIR;
-	else process.env.WITNESS_DIR = prevEnv;
-	rmSync(dir, { recursive: true, force: true });
 	rmSync(cwd, { recursive: true, force: true });
 });
 
 describe("loadHistory", () => {
-	test("sums repo totals, skips malformed lines and other repos", () => {
+	test("sums repo totals, skips malformed lines", () => {
 		const valid: AgentTurnRecord = {
 			t: new Date().toISOString(),
 			sid: "old-session",
@@ -53,18 +53,19 @@ describe("loadHistory", () => {
 			],
 		};
 		const foreign = { ...valid, rep: "https://github.com/other/repo" };
+		mkdirSync(join(cwd, ".witness"), { recursive: true });
 		writeFileSync(
-			join(dir, "usage.jsonl"),
+			witnessFile(),
 			`${JSON.stringify(valid)}\nnot json at all\n${JSON.stringify(foreign)}\n\n`,
 		);
 
-		const session = new Session({ sessionId: "s1", harness: "pi", path: dir });
-		expect(session.totalTokens).toBe(150);
-		expect(session.totalCost).toBe(0.75);
+		const session = new Session({ sessionId: "s1", harness: "pi" });
+		expect(session.totalTokens).toBe(300);
+		expect(session.totalCost).toBe(1.5);
 	});
 
 	test("retry turn after flush is not dropped", () => {
-		const session = new Session({ sessionId: "s1", harness: "pi", path: dir });
+		const session = new Session({ sessionId: "s1", harness: "pi" });
 		session.startAgent({
 			dateTimeISOString: "2026-01-01T00:00:00Z",
 			model: "m1",
@@ -76,9 +77,7 @@ describe("loadHistory", () => {
 		session.addTurn({ index: 0, tools: [], totalUsage: usage(20, 0.2) });
 		session.flush();
 
-		const lines = readFileSync(join(dir, "usage.jsonl"), "utf8")
-			.trim()
-			.split("\n");
+		const lines = readFileSync(witnessFile(), "utf8").trim().split("\n");
 		expect(lines).toHaveLength(2);
 		const rec = JSON.parse(lines[1]) as AgentTurnRecord;
 		expect(rec.turns).toHaveLength(1);
@@ -89,7 +88,7 @@ describe("loadHistory", () => {
 
 describe("addTurn + flush", () => {
 	test("flush appends one record and clears the current turn", () => {
-		const session = new Session({ sessionId: "s1", harness: "pi", path: dir });
+		const session = new Session({ sessionId: "s1", harness: "pi" });
 		session.sessionName = "my session";
 		session.startAgent({
 			dateTimeISOString: "2026-01-01T00:00:00Z",
@@ -111,9 +110,7 @@ describe("addTurn + flush", () => {
 		session.flush();
 		session.flush(); // second flush is a no-op
 
-		const lines = readFileSync(join(dir, "usage.jsonl"), "utf8")
-			.trim()
-			.split("\n");
+		const lines = readFileSync(witnessFile(), "utf8").trim().split("\n");
 		expect(lines).toHaveLength(1);
 		const rec = JSON.parse(lines[0] as string) as AgentTurnRecord;
 		expect(rec.sid).toBe("s1");
@@ -130,7 +127,7 @@ describe("addTurn + flush", () => {
 	});
 
 	test("addTurn before startAgent: totals count, auto-starts a record so flush persists", () => {
-		const session = new Session({ sessionId: "s1", harness: "pi", path: dir });
+		const session = new Session({ sessionId: "s1", harness: "pi" });
 		session.startAgent({
 			dateTimeISOString: "2026-01-01T00:00:00Z",
 			model: "m1",
@@ -139,9 +136,7 @@ describe("addTurn + flush", () => {
 		session.addTurn({ tools: [], totalUsage: usage(7, 0.07) });
 		expect(session.totalTokens).toBe(7);
 		session.flush();
-		const lines = readFileSync(join(dir, "usage.jsonl"), "utf8")
-			.trim()
-			.split("\n");
+		const lines = readFileSync(witnessFile(), "utf8").trim().split("\n");
 		expect(lines).toHaveLength(2);
 		expect(JSON.parse(lines[1] ?? "") as AgentTurnRecord).toMatchObject({
 			mod: "m1",
@@ -159,9 +154,10 @@ describe("addTurn + flush", () => {
 			rep: cwd,
 			turns: [{ ti: 0, tools: [], totalUsage: usage(100, 1) }],
 		};
-		writeFileSync(join(dir, "usage.jsonl"), `${JSON.stringify(old)}\n`);
+		mkdirSync(join(cwd, ".witness"), { recursive: true });
+		writeFileSync(witnessFile(), `${JSON.stringify(old)}\n`);
 
-		const session = new Session({ sessionId: "s2", harness: "pi", path: dir });
+		const session = new Session({ sessionId: "s2", harness: "pi" });
 		session.startAgent({
 			dateTimeISOString: "2026-01-02T00:00:00Z",
 			model: "m",
@@ -170,26 +166,19 @@ describe("addTurn + flush", () => {
 		session.flush();
 
 		expect(session.totalTokens).toBe(101);
-		expect(
-			readFileSync(join(dir, "usage.jsonl"), "utf8").trim().split("\n"),
-		).toHaveLength(2);
+		expect(readFileSync(witnessFile(), "utf8").trim().split("\n")).toHaveLength(
+			2,
+		);
 	});
 });
 
 describe("storage path", () => {
-	test("WITNESS_DIR overrides default location", () => {
-		process.env.WITNESS_DIR = dir;
-		const session = new Session({
-			sessionId: "s1",
-			harness: "pi",
-			path: undefined,
-		});
+	test("writes into .witness under the git root", () => {
+		const session = new Session({ sessionId: "s1", harness: "pi" });
 		session.startAgent({ dateTimeISOString: "t", model: "m" });
 		session.addTurn({ tools: [], totalUsage: usage(1, 0) });
 		session.flush();
-		expect(readFileSync(join(dir, "usage.jsonl"), "utf8")).toContain(
-			'"sid":"s1"',
-		);
+		expect(readFileSync(witnessFile(), "utf8")).toContain('"sid":"s1"');
 	});
 
 	test("repoDirName sanitizes repo identity", () => {
@@ -203,21 +192,5 @@ describe("storage path", () => {
 			"_Users_fredi_projects_witness",
 		);
 		expect(repoDirName("")).toBe("repo");
-	});
-
-	test("perRepo writes into repo subdirectory", () => {
-		process.env.WITNESS_DIR = dir;
-		const session = new Session({
-			sessionId: "s1",
-			harness: "pi",
-			path: undefined,
-			perRepo: true,
-		});
-		session.startAgent({ dateTimeISOString: "t", model: "m" });
-		session.addTurn({ tools: [], totalUsage: usage(1, 0) });
-		session.flush();
-		expect(
-			readFileSync(join(dir, repoDirName(cwd), "usage.jsonl"), "utf8"),
-		).toContain('"sid":"s1"');
 	});
 });
