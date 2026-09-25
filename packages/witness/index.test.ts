@@ -9,7 +9,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { AgentTurnRecord, Usage } from "../types";
-import { repoDirName, Session } from "./index";
+import { Session } from "./index";
 
 const usage = (tok: number, cst: number): Usage => ({
 	in: 0,
@@ -179,18 +179,5 @@ describe("storage path", () => {
 		session.addTurn({ tools: [], totalUsage: usage(1, 0) });
 		session.flush();
 		expect(readFileSync(witnessFile(), "utf8")).toContain('"sid":"s1"');
-	});
-
-	test("repoDirName sanitizes repo identity", () => {
-		expect(repoDirName("git@github.com:owner/witness.git")).toBe(
-			"github.com_owner_witness",
-		);
-		expect(repoDirName("https://github.com/owner/witness")).toBe(
-			"github.com_owner_witness",
-		);
-		expect(repoDirName("/Users/fredi/projects/witness")).toBe(
-			"_Users_fredi_projects_witness",
-		);
-		expect(repoDirName("")).toBe("repo");
 	});
 });

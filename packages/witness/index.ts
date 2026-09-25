@@ -5,15 +5,6 @@ import type { AgentTurnRecord, Tool, Usage } from "../types";
 
 export type { AgentTurnRecord, Tool, Usage };
 
-export function repoDirName(rep: string): string {
-	const cleaned = rep
-		.replace(/^[a-z][a-z0-9+.-]*:\/\//i, "")
-		.replace(/^git@/, "")
-		.replace(/\.git$/, "")
-		.replace(/[/\\:]/g, "_");
-	return cleaned || "repo";
-}
-
 export class Session {
 	public sessionName: string = "";
 	public totalTokens: number = 0;
