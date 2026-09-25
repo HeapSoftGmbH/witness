@@ -1,7 +1,6 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
-import { homedir } from "node:os";
 import { extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
@@ -53,8 +52,6 @@ export default function main(pi: ExtensionAPI) {
 		session = new Session({
 			sessionId: ctx.sessionManager.getSessionId(),
 			harness: "pi",
-			perRepo: true,
-			path: process.env.WITNESS_DIR ?? join(homedir(), ".pi", "witness"),
 		});
 		session.addMetadata({ start_reason: event.reason });
 		renderStatus();

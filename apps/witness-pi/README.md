@@ -1,9 +1,6 @@
 # witness-pi
 
-Pi adapter for witness. Writes usage data to `~/.pi/witness/<repo>/usage.jsonl`
-(one subdirectory per repo, matching the pi extension data convention —
-context-mode uses `~/.pi/context-mode`). Override the data root with
-`WITNESS_DIR`.
+Pi adapter for witness. Writes usage data to `<git-root>/.witness/usage.jsonl`. Override the data root with `WITNESS_DIR`.
 
 To install dependencies:
 

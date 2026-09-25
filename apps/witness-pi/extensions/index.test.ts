@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { type AgentTurnRecord, repoDirName } from "witness";
+import type { AgentTurnRecord } from "witness";
 import main from "./index";
 
 type FakeCtx = {
@@ -44,7 +44,7 @@ function setup(model?: { provider: string; name: string }) {
 }
 
 const record = (): AgentTurnRecord[] =>
-	readFileSync(join(dir, repoDirName(cwd), "usage.jsonl"), "utf8")
+	readFileSync(join(dir, "usage.jsonl"), "utf8")
 		.trim()
 		.split("\n")
 		.map((l) => JSON.parse(l) as AgentTurnRecord);
