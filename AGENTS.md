@@ -28,8 +28,8 @@ bun run lint:fix
 `.witness/usage.jsonl` — one `AgentTurnRecord` JSON per agent burst, append-only, shared by all harnesses:
 
 - Short keys (`t`, `sid`, `sn`, `h`, `mod`, `rep`, `ti`, `tools`, `totalUsage`) are **frozen**. New fields may be added; existing keys are never renamed or removed.
-- Storage: `<git-root>/.witness/usage.jsonl`, override via `WITNESS_DIR`. Repo identity = git remote URL (fallback: git root, then cwd).
-- Old/unknown lines must keep parsing — `loadHistory` skips malformed lines and lines from other repos; keep that behavior.
+- Storage: `<git-root>/.witness/usage.jsonl`. Repo identity = git remote URL (fallback: git root, then cwd).
+- Old/unknown lines must keep parsing — `loadHistory` skips malformed lines; keep that behavior.
 - Buffer turns in memory, flush once on idle (`agent_settled`-equivalent) and shutdown. One `appendFileSync` per burst — concurrent agent sessions on the same repo stay safe. Trade-off: hard kill loses the unflushed burst.
 
 ## Adding a harness adapter
