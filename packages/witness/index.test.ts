@@ -63,10 +63,27 @@ describe("loadHistory", () => {
 		expect(session.totalCost).toBe(0.75);
 	});
 
-	test("missing history file is fine", () => {
+	test("retry turn after flush is not dropped", () => {
 		const session = new Session({ sessionId: "s1", harness: "pi", path: dir });
-		expect(session.totalTokens).toBe(0);
-		expect(session.totalCost).toBe(0);
+		session.startAgent({
+			dateTimeISOString: "2026-01-01T00:00:00Z",
+			model: "m1",
+		});
+		session.addTurn({ index: 0, tools: [], totalUsage: usage(10, 0.1) });
+		session.flush();
+
+		// retry attempt lands after agent_settled flushed the burst
+		session.addTurn({ index: 0, tools: [], totalUsage: usage(20, 0.2) });
+		session.flush();
+
+		const lines = readFileSync(join(dir, "usage.jsonl"), "utf8")
+			.trim()
+			.split("\n");
+		expect(lines).toHaveLength(2);
+		const rec = JSON.parse(lines[1]) as AgentTurnRecord;
+		expect(rec.turns).toHaveLength(1);
+		expect(rec.mod).toBe("m1"); // model remembered from last startAgent
+		expect(session.totalCost).toBeCloseTo(0.3);
 	});
 });
 
@@ -112,12 +129,24 @@ describe("addTurn + flush", () => {
 		expect(rec.turns?.[0]?.tools[0]?.name).toBe("read");
 	});
 
-	test("addTurn before startAgent: totals count, flush writes nothing", () => {
+	test("addTurn before startAgent: totals count, auto-starts a record so flush persists", () => {
 		const session = new Session({ sessionId: "s1", harness: "pi", path: dir });
+		session.startAgent({
+			dateTimeISOString: "2026-01-01T00:00:00Z",
+			model: "m1",
+		});
+		session.flush();
 		session.addTurn({ tools: [], totalUsage: usage(7, 0.07) });
 		expect(session.totalTokens).toBe(7);
 		session.flush();
-		expect(() => readFileSync(join(dir, "usage.jsonl"), "utf8")).toThrow();
+		const lines = readFileSync(join(dir, "usage.jsonl"), "utf8")
+			.trim()
+			.split("\n");
+		expect(lines).toHaveLength(2);
+		expect(JSON.parse(lines[1] ?? "") as AgentTurnRecord).toMatchObject({
+			mod: "m1",
+			turns: [{ ti: 0, totalUsage: { tok: 7, cst: 0.07 } }],
+		});
 	});
 
 	test("totals combine history and new turns, history file preserved", () => {

@@ -22,6 +22,8 @@ export class Session {
 
 	private currentAgentTurn?: AgentTurnRecord;
 
+	private lastModel: string = "";
+
 	private metadata: Record<string, unknown> = {};
 	private skills: string[] = [];
 	public totalTokens: number = 0;
@@ -114,6 +116,7 @@ export class Session {
 		dateTimeISOString: string;
 		model: string;
 	}) {
+		this.lastModel = model;
 		this.currentAgentTurn = {
 			t: dateTimeISOString,
 			sid: this.sessionId,
@@ -140,6 +143,16 @@ export class Session {
 	}) {
 		this.totalTokens += totalUsage.tok;
 		this.totalCost += totalUsage.cst;
+
+		// A retry/compaction turn can arrive after agent_settled already
+		// flushed the burst. Never drop it: auto-start a record so every
+		// attempt persists on disk.
+		if (!this.currentAgentTurn) {
+			this.startAgent({
+				dateTimeISOString: new Date().toISOString(),
+				model: this.lastModel,
+			});
+		}
 		this.currentAgentTurn?.turns.push({ ti: index || 0, tools, totalUsage });
 	}
 
