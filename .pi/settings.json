@@ -1,3 +1,3 @@
 {
-	"extensions": ["../apps/witness-pi/extensions"]
+	"extensions": ["../apps/witness-pi/dist/index.js"]
 }

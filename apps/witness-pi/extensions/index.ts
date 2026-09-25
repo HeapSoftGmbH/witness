@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
-import { extname, join } from "node:path";
+import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type {
 	ExtensionAPI,
@@ -139,12 +139,19 @@ export default function main(pi: ExtensionAPI) {
 	pi.registerCommand("witness-pi:show", {
 		description: "Show detailed usage data for this project",
 		handler: async (_args, c) => {
-			const dist = fileURLToPath(
-				new URL("./dist", import.meta.resolve("local-web/package.json")),
-			);
+			const base = dirname(fileURLToPath(import.meta.url));
+			const candidates = [
+				join(base, "local-web"),
+				join(base, "../../packages/local-web/dist"),
+				join(base, "../..", "local-web"),
+			];
+			const dist = candidates.find((p) => existsSync(join(p, "index.html")));
 
-			if (!existsSync(join(dist, "index.html"))) {
-				c.ui.notify("local-web not built — run `bun run build:web`", "error");
+			if (!dist) {
+				c.ui.notify(
+					`witness: viewer not found (tried: ${candidates.join(", ")})`,
+					"error",
+				);
 				return;
 			}
 

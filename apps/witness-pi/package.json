@@ -1,26 +1,23 @@
 {
 	"name": "witness-pi",
-	"module": "extensions/index.ts",
-	"keywords": [
-		"witness-pi"
-	],
+	"version": "0.1.0",
 	"type": "module",
-	"private": true,
+	"module": "./dist/index.js",
+	"files": ["dist"],
+	"keywords": ["witness-pi", "pi-package"],
+	"scripts": {
+		"build": "bun run --cwd ../.. build:web && bun build extensions/index.ts --outdir dist --target=bun && rm -rf dist/local-web && cp -r ../../packages/local-web/dist dist/local-web",
+		"prepack": "bun run build"
+	},
 	"devDependencies": {
-		"@types/bun": "catalog:"
-	},
-	"peerDependencies": {
-		"typescript": "catalog:"
-	},
-	"dependencies": {
-		"@earendil-works/pi-coding-agent": "^0.85.1",
+		"@types/bun": "^1.4.2",
 		"lib": "workspace:*",
-		"local-web": "workspace:*",
 		"witness": "workspace:*"
 	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*"
+	},
 	"pi": {
-		"extensions": [
-			"./extensions"
-		]
+		"extensions": ["./dist/index.js"]
 	}
 }
