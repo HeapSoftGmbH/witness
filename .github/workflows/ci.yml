@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    tags-ignore: ["v*"]
+    tags-ignore: ["*-v*"]
   workflow_dispatch:
 
 jobs:
@@ -32,20 +32,16 @@ jobs:
         run: bun lint
 
       - name: test
-        run: bun test packages/witness apps/witness-pi
+        run: bun test:extensions && bun test:web
 
   release:
-    needs: quality
-    if: github.ref == 'refs/heads/main'
+    if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - name: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          fetch-depth: 0
-          fetch-tags: true
 
       - name: setup bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
@@ -60,29 +56,20 @@ jobs:
       - name: install
         run: bun install --frozen-lockfile
 
-      - name: next version
-        id: semver
-        uses: ietf-tools/semver-action@c90370b2958652d71c06a3484129a4d423a6d8a8
-        with:
-          token: ${{ github.token }}
-          branch: main
-          noVersionBumpBehavior: patch
-
-      - name: tag release
-        env:
-          VERSION: ${{ steps.semver.outputs.nextStrict }}
+      - name: resolve tag
         run: |
-          git tag v$VERSION
-          git push origin v$VERSION
+          APP="${GITHUB_REF_NAME%-v*}"
+          VERSION="${GITHUB_REF_NAME##*-v}"
+          test -d "apps/$APP" || { echo "apps/$APP not found"; exit 1; }
+          echo "app=$APP" >> "$GITHUB_ENV"
+          echo "version=$VERSION" >> "$GITHUB_ENV"
 
-      - name: set package version
-        working-directory: apps/witness-pi
-        env:
-          VERSION: ${{ steps.semver.outputs.nextStrict }}
-        run: npm pkg set version=$VERSION
+      - name: check version matches tag
+        working-directory: apps/${{ env.app }}
+        run: test "$(node -p "require('./package.json').version")" = "$version"
 
       - name: publish
-        working-directory: apps/witness-pi
+        working-directory: apps/${{ env.app }}
         run: bun publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

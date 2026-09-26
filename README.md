@@ -35,6 +35,25 @@ Teams can share it via project settings (`-l`): pi installs missing packages aut
 
 `apps/witness-claude`, `apps/witness-copilot`, `apps/witness-opencode` are placeholders for adapters using the same core. To add one: new `apps/witness-<harness>` package, depend on `witness: workspace:*`, call `Session` on the harness's turn-end events, flush on idle/shutdown. See [AGENTS.md](AGENTS.md).
 
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs two jobs:
+
+- **quality** — every push (except release tags): install, `bun audit`, format check, lint, tests.
+- **release** — on tag `<app>-vX.Y.Z`: publishes `apps/<app>` to npm, after checking the tag matches the package's `version`.
+
+Releasing an extension (per-package versions, independent of each other):
+
+```bash
+cd apps/witness-pi
+npm version 1.2.4 --no-git-tag-version
+cd ../..
+git commit -am "witness-pi 1.2.4" && git tag witness-pi-v1.2.4
+git push origin main --tags
+```
+
+A new `apps/witness-<harness>` adapter needs no pipeline changes — tagging `witness-claude-v0.1.0` publishes `apps/witness-claude`.
+
 ## Development
 
 ```bash
