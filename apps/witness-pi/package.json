@@ -3,8 +3,13 @@
 	"version": "0.0.1",
 	"type": "module",
 	"module": "./dist/index.js",
-	"files": ["dist"],
-	"keywords": ["witness-pi", "pi-package"],
+	"files": [
+		"dist"
+	],
+	"keywords": [
+		"witness-pi",
+		"pi-package"
+	],
 	"scripts": {
 		"build": "bun run --cwd ../.. build:web && bun build extensions/index.ts --outdir dist --target=bun && rm -rf dist/local-web && cp -r ../../packages/local-web/dist dist/local-web",
 		"prepack": "bun run build"
@@ -18,6 +23,8 @@
 		"@earendil-works/pi-coding-agent": "*"
 	},
 	"pi": {
-		"extensions": ["./dist/index.js"]
+		"extensions": [
+			"./dist/index.js"
+		]
 	}
 }
