@@ -71,5 +71,3 @@ jobs:
       - name: publish
         working-directory: apps/${{ env.app }}
         run: bun publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
