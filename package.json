@@ -26,7 +26,8 @@
 		"test:web": "bun run --cwd packages/local-web test",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
-		"format": "biome format --write ."
+		"format": "biome format --write .",
+		"format:check": "biome format ."
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.5.14",
