@@ -77,4 +77,4 @@ jobs:
 
       - name: publish
         working-directory: apps/${{ env.app }}
-        run: bun publish
+        run: npm stage publish
