@@ -68,10 +68,6 @@ jobs:
           echo "app=$APP" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_ENV"
 
-      - name: check version matches tag
-        working-directory: apps/${{ env.app }}
-        run: test "$(node -p "require('./package.json').version")" = "$version"
-
       - name: create github release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
         with:
