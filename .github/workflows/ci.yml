@@ -1,4 +1,4 @@
-name: CI
+name: Check and Publish
 
 on:
   push:
@@ -40,7 +40,7 @@ jobs:
     needs: quality
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
     steps:
       - name: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
@@ -70,6 +70,11 @@ jobs:
         working-directory: apps/${{ env.app }}
         run: test "$(node -p "require('./package.json').version")" = "$version"
 
+      - name: create github release
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
+        with:
+          name: "${{ env.app }} v${{ env.version }}"
+
       - name: publish
         working-directory: apps/${{ env.app }}
-        run: bun publish
+        run: bun stage publish
