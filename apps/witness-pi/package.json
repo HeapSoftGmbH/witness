@@ -1,6 +1,6 @@
 {
 	"name": "witness-pi",
-	"version": "0.0.9",
+	"version": "0.0.10",
 	"type": "module",
 	"module": "./dist/index.js",
 	"files": [
@@ -10,6 +10,10 @@
 		"witness-pi",
 		"pi-package"
 	],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/HeapSoftGmbH/witness"
+	},
 	"scripts": {
 		"build": "bun run --cwd ../.. build:web && bun build extensions/index.ts --outdir dist --target=bun && rm -rf dist/local-web && cp -r ../../packages/local-web/dist dist/local-web",
 		"prepack": "bun run build"
