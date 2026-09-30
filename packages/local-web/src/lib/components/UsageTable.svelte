@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { compactNumberFormatter, dollarNumberFormatterWith4Fracts } from 'lib';
+	import {
+		RiArrowDownLine,
+		RiArrowRightSLine,
+		RiArrowUpDownLine,
+		RiArrowUpLine
+	} from 'remixicon-svelte';
 
-	import ArrowDown from '@lucide/svelte/icons/arrow-down';
-	import ArrowUp from '@lucide/svelte/icons/arrow-up';
-	import ArrowUpDown from '@lucide/svelte/icons/arrow-up-down';
-	import ChevronRight from '@lucide/svelte/icons/chevron-right';
 	import {
 		type Column,
 		type GroupingState,
@@ -140,11 +142,11 @@
 
 {#snippet sortIcon(column: Column<Features, UsageRow>)}
 	{#if column.getIsSorted() === 'asc'}
-		<ArrowUp data-icon="inline-end" />
+		<RiArrowUpLine data-icon="inline-end" />
 	{:else if column.getIsSorted() === 'desc'}
-		<ArrowDown data-icon="inline-end" />
+		<RiArrowDownLine data-icon="inline-end" />
 	{:else}
-		<ArrowUpDown data-icon="inline-end" class="opacity-50" />
+		<RiArrowUpDownLine data-icon="inline-end" class="opacity-50" />
 	{/if}
 {/snippet}
 
@@ -160,7 +162,7 @@
 
 {#snippet groupCell(row: Row<Features, UsageRow>)}
 	<button class="flex items-center gap-1.5 font-medium" onclick={row.getToggleExpandedHandler()}>
-		<ChevronRight
+		<RiArrowRightSLine
 			class={cn('size-4 shrink-0 transition-transform', row.getIsExpanded() && 'rotate-90')}
 		/>
 		{String(row.getValue(row.groupingColumnId ?? ''))}

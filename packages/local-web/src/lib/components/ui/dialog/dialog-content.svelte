@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { Dialog as DialogPrimitive } from 'bits-ui';
+	import { RiCloseLine } from 'remixicon-svelte';
 	import type { Snippet } from 'svelte';
 	import type { ComponentProps } from 'svelte';
-
-	import XIcon from '@lucide/svelte/icons/x';
 
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { type WithoutChildrenOrChild, cn } from '$lib/utils.js';
@@ -41,7 +40,7 @@
 			<DialogPrimitive.Close data-slot="dialog-close">
 				{#snippet child({ props })}
 					<Button variant="ghost" class="absolute top-4 right-4" size="icon-sm" {...props}>
-						<XIcon />
+						<RiCloseLine />
 						<span class="sr-only">Close</span>
 					</Button>
 				{/snippet}
