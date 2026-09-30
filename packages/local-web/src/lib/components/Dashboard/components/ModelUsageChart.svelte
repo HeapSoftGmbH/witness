@@ -73,7 +73,6 @@
 			{data}
 			x="date"
 			y="cost"
-			seriesLayout="stack"
 			series={models}
 			yScale={scaleLinear()}
 			xScale={scalePoint()}
