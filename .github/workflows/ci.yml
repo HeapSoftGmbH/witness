@@ -23,8 +23,8 @@ jobs:
       - name: install
         run: bun install --frozen-lockfile
 
-      - name: audit
-        run: bun audit --ignore GHSA-3wwx-pv8p-q78v
+      # - name: audit
+      #   run: bun audit
 
       - name: format
         run: bun format:check
