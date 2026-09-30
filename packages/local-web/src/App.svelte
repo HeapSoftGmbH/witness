@@ -11,7 +11,11 @@
 	import './app.css';
 
 	onMount(async () => {
-		records.splice(0, records.length, ...(await (await fetch('/api/records')).json()));
+		try {
+			records.data.splice(0, records.data.length, ...(await (await fetch('/api/records')).json()));
+		} finally {
+			records.loaded = true;
+		}
 	});
 </script>
 

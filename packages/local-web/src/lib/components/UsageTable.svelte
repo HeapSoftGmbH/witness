@@ -33,6 +33,7 @@
 
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
 	import { records } from '$lib/stores/records.svelte.ts';
@@ -52,7 +53,7 @@
 	};
 
 	const rows = $derived(
-		records
+		records.data
 			.map((r) => ({
 				t: r.t,
 				sid: r.sid,
@@ -221,62 +222,78 @@
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
-		{#each table.getRowModel().rows as row (row.id)}
-			{#if row.getIsGrouped()}
+		{#if records.loaded}
+			{#each table.getRowModel().rows as row (row.id)}
+				{#if row.getIsGrouped()}
+					<Table.Row>
+						<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
+							{#if row.groupingColumnId === 'sid'}
+								{@render groupCell(row)}
+							{:else}
+								{uniqueValue(row, 'sid')}
+							{/if}
+						</Table.Cell>
+						<Table.Cell class="text-muted-foreground">
+							{new Date(row.getValue('t') as string).toLocaleString()}
+						</Table.Cell>
+						<Table.Cell>
+							{#if row.groupingColumnId === 'h'}
+								{@render groupCell(row)}
+							{:else}
+								{uniqueValue(row, 'h')}
+							{/if}
+						</Table.Cell>
+						<Table.Cell>
+							{#if row.groupingColumnId === 'mod'}
+								{@render groupCell(row)}
+							{:else}
+								{uniqueValue(row, 'mod')}
+							{/if}
+						</Table.Cell>
+						<Table.Cell class="text-right font-medium">{row.getValue('turns')}</Table.Cell>
+						<Table.Cell class="text-right font-medium">{row.getValue('tools')}</Table.Cell>
+						<Table.Cell class="text-right font-medium">{row.getValue('skills')}</Table.Cell>
+						<Table.Cell class="text-right font-medium">
+							{compactNumberFormatter.format(row.getValue('tokens') as number)}
+						</Table.Cell>
+						<Table.Cell class="text-right font-medium">
+							{dollarNumberFormatterWith4Fracts.format(row.getValue('cost') as number)}
+						</Table.Cell>
+					</Table.Row>
+				{:else}
+					<Table.Row class="bg-accent">
+						<Table.Cell class="font-mono text-xs overflow-hidden text-clip pl-8">
+							{row.original.sid}
+						</Table.Cell>
+						<Table.Cell>{new Date(row.original.t).toLocaleString()}</Table.Cell>
+						<Table.Cell>{row.original.h}</Table.Cell>
+						<Table.Cell>{row.original.mod}</Table.Cell>
+						<Table.Cell class="text-right">{row.original.turns}</Table.Cell>
+						<Table.Cell class="text-right">{row.original.tools}</Table.Cell>
+						<Table.Cell class="text-right">{row.original.skills}</Table.Cell>
+						<Table.Cell class="text-right">
+							{compactNumberFormatter.format(row.original.tokens)}
+						</Table.Cell>
+						<Table.Cell class="text-right">
+							{dollarNumberFormatterWith4Fracts.format(row.original.cost)}
+						</Table.Cell>
+					</Table.Row>
+				{/if}
+			{/each}
+		{:else}
+			{#each [0, 1, 2, 3, 4] as n (n)}
 				<Table.Row>
-					<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
-						{#if row.groupingColumnId === 'sid'}
-							{@render groupCell(row)}
-						{:else}
-							{uniqueValue(row, 'sid')}
-						{/if}
-					</Table.Cell>
-					<Table.Cell class="text-muted-foreground">
-						{new Date(row.getValue('t') as string).toLocaleString()}
-					</Table.Cell>
-					<Table.Cell>
-						{#if row.groupingColumnId === 'h'}
-							{@render groupCell(row)}
-						{:else}
-							{uniqueValue(row, 'h')}
-						{/if}
-					</Table.Cell>
-					<Table.Cell>
-						{#if row.groupingColumnId === 'mod'}
-							{@render groupCell(row)}
-						{:else}
-							{uniqueValue(row, 'mod')}
-						{/if}
-					</Table.Cell>
-					<Table.Cell class="text-right font-medium">{row.getValue('turns')}</Table.Cell>
-					<Table.Cell class="text-right font-medium">{row.getValue('tools')}</Table.Cell>
-					<Table.Cell class="text-right font-medium">{row.getValue('skills')}</Table.Cell>
-					<Table.Cell class="text-right font-medium">
-						{compactNumberFormatter.format(row.getValue('tokens') as number)}
-					</Table.Cell>
-					<Table.Cell class="text-right font-medium">
-						{dollarNumberFormatterWith4Fracts.format(row.getValue('cost') as number)}
-					</Table.Cell>
+					<Table.Cell class="font-mono text-xs"><Skeleton class="h-4 w-28" /></Table.Cell>
+					<Table.Cell><Skeleton class="h-4 w-36" /></Table.Cell>
+					<Table.Cell><Skeleton class="h-4 w-14" /></Table.Cell>
+					<Table.Cell><Skeleton class="h-4 w-48" /></Table.Cell>
+					<Table.Cell class="text-right"><Skeleton class="ml-auto h-4 w-8" /></Table.Cell>
+					<Table.Cell class="text-right"><Skeleton class="ml-auto h-4 w-8" /></Table.Cell>
+					<Table.Cell class="text-right"><Skeleton class="ml-auto h-4 w-8" /></Table.Cell>
+					<Table.Cell class="text-right"><Skeleton class="ml-auto h-4 w-12" /></Table.Cell>
+					<Table.Cell class="text-right"><Skeleton class="ml-auto h-4 w-14" /></Table.Cell>
 				</Table.Row>
-			{:else}
-				<Table.Row class="bg-accent">
-					<Table.Cell class="font-mono text-xs overflow-hidden text-clip pl-8">
-						{row.original.sid}
-					</Table.Cell>
-					<Table.Cell>{new Date(row.original.t).toLocaleString()}</Table.Cell>
-					<Table.Cell>{row.original.h}</Table.Cell>
-					<Table.Cell>{row.original.mod}</Table.Cell>
-					<Table.Cell class="text-right">{row.original.turns}</Table.Cell>
-					<Table.Cell class="text-right">{row.original.tools}</Table.Cell>
-					<Table.Cell class="text-right">{row.original.skills}</Table.Cell>
-					<Table.Cell class="text-right">
-						{compactNumberFormatter.format(row.original.tokens)}
-					</Table.Cell>
-					<Table.Cell class="text-right">
-						{dollarNumberFormatterWith4Fracts.format(row.original.cost)}
-					</Table.Cell>
-				</Table.Row>
-			{/if}
-		{/each}
+			{/each}
+		{/if}
 	</Table.Body>
 </Table.Root>

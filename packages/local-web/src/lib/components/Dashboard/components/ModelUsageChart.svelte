@@ -7,6 +7,7 @@
 	import type { AgentTurnRecord } from 'witness';
 
 	import * as Chart from '$lib/components/ui/chart/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton';
 	import { records } from '$lib/stores/records.svelte.ts';
 	import { getModelFromSourceString } from '$lib/utils';
 
@@ -23,7 +24,7 @@
 
 	// series per model, ordered alphabetically by model name
 	const models = $derived.by(() => {
-		const totals = records.reduce<Record<string, number>>((acc, r) => {
+		const totals = records.data.reduce<Record<string, number>>((acc, r) => {
 			acc[r.mod] = (acc[r.mod] ?? 0) + value(r);
 			return acc;
 		}, {});
@@ -49,7 +50,7 @@
 
 	// aggregate metric per calendar day (UTC, from ISO timestamp) per model, last 7 days, missing = 0
 	const data = $derived.by(() => {
-		const byDay = records.reduce<Record<string, Record<string, number>>>((acc, r) => {
+		const byDay = records.data.reduce<Record<string, Record<string, number>>>((acc, r) => {
 			const day = r.t.slice(0, 10);
 			const dayCosts = acc[day] ?? {};
 			dayCosts[r.mod] = (dayCosts[r.mod] ?? 0) + value(r);
@@ -66,48 +67,52 @@
 	});
 </script>
 
-<Chart.Container config={chartConfig} class="h-75 w-full">
-	<AreaChart
-		{data}
-		x="date"
-		y="cost"
-		seriesLayout="stack"
-		series={models}
-		yScale={scaleLinear()}
-		xScale={scalePoint()}
-		padding={defaultChartPadding({ left: 26, right: 20 })}
-		props={{
-			area: {
-				curve: curveMonotoneX,
-				fillOpacity: 0.3,
-				motion: 'tween'
-			},
-			xAxis: { format: formatDay },
-			yAxis: { format: (v) => (v < 1 ? '' : compactNumberFormatter.format(v)) }
-		}}
-	>
-		{#snippet tooltip({ context })}
-			{@const d = context.tooltip.data}
-			<Tooltip.Root variant="none">
-				<div
-					class="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl"
-				>
-					{#if d}
-						<div class="font-medium">{formatDate(d.date)}</div>
-						<!-- own series list, not context.tooltip.series: layerchart reverses stacked
+{#if records.loaded}
+	<Chart.Container config={chartConfig} class="h-75 w-full">
+		<AreaChart
+			{data}
+			x="date"
+			y="cost"
+			seriesLayout="stack"
+			series={models}
+			yScale={scaleLinear()}
+			xScale={scalePoint()}
+			padding={defaultChartPadding({ left: 26, right: 20 })}
+			props={{
+				area: {
+					curve: curveMonotoneX,
+					fillOpacity: 0.3,
+					motion: 'tween'
+				},
+				xAxis: { format: formatDay },
+				yAxis: { format: (v) => (v < 1 ? '' : compactNumberFormatter.format(v)) }
+			}}
+		>
+			{#snippet tooltip({ context })}
+				{@const d = context.tooltip.data}
+				<Tooltip.Root variant="none">
+					<div
+						class="grid min-w-32 items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl"
+					>
+						{#if d}
+							<div class="font-medium">{formatDate(d.date)}</div>
+							<!-- own series list, not context.tooltip.series: layerchart reverses stacked
 								 order (bottom-of-stack first), which would put the top model last -->
-						{#each models as m (m.key)}
-							<div class="flex w-full items-center gap-2">
-								<div class="h-2.5 w-2.5 shrink-0 rounded-xs" style="background: {m.color}"></div>
-								<span class="flex-1 text-muted-foreground">{m.label}</span>
-								<span class="font-mono font-medium text-foreground tabular-nums">
-									{format(d.models[m.key] ?? 0)}
-								</span>
-							</div>
-						{/each}
-					{/if}
-				</div>
-			</Tooltip.Root>
-		{/snippet}
-	</AreaChart>
-</Chart.Container>
+							{#each models as m (m.key)}
+								<div class="flex w-full items-center gap-2">
+									<div class="h-2.5 w-2.5 shrink-0 rounded-xs" style="background: {m.color}"></div>
+									<span class="flex-1 text-muted-foreground">{m.label}</span>
+									<span class="font-mono font-medium text-foreground tabular-nums">
+										{format(d.models[m.key] ?? 0)}
+									</span>
+								</div>
+							{/each}
+						{/if}
+					</div>
+				</Tooltip.Root>
+			{/snippet}
+		</AreaChart>
+	</Chart.Container>
+{:else}
+	<Skeleton class="h-75 w-full" />
+{/if}

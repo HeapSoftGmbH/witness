@@ -6,6 +6,8 @@
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import ScrollArea from '$lib/components/ui/scroll-area/scroll-area.svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton';
+	import { records } from '$lib/stores/records.svelte';
 	import { cn } from '$lib/utils.js';
 
 	let {
@@ -87,7 +89,7 @@
 		<Card.Header>
 			<Card.Title class="flex justify-between items-center">
 				{title}
-				{#if data.length > 5}
+				{#if data.length > 5 && records.loaded}
 					<Dialog.Trigger type="button" class={buttonVariants({ size: 'xs' })}>
 						View all
 					</Dialog.Trigger>
@@ -96,7 +98,11 @@
 			<Card.Description>{description}</Card.Description>
 		</Card.Header>
 		<Card.Content>
-			{@render chart(visible, 'max-h-75')}
+			{#if records.loaded}
+				{@render chart(visible, 'max-h-75')}
+			{:else}
+				<Skeleton class=" h-75 w-full" />
+			{/if}
 		</Card.Content>
 	</Card.Root>
 	<Dialog.Content class="min-w-xl">

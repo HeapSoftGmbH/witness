@@ -11,12 +11,14 @@ const awaitTick = () => new Promise((r) => setTimeout(r, 0));
 
 describe('ModelUsageChart', () => {
 	test('mounts and renders an svg for a single record', async () => {
-		records.push(
+		records.data.push(
 			record({
 				mod: 'anthropic/claude-sonnet-4',
 				turns: [{ ti: 0, tools: [tool('read')], totalUsage: usage(1000, 1) }]
 			})
 		);
+
+		records.loaded = true;
 
 		const target = document.createElement('div');
 		mount(ModelUsageChart, {

@@ -8,7 +8,7 @@ import UsageTable from './UsageTable.svelte';
 
 describe('UsageTable', () => {
 	test('renders one row per session with computed totals', () => {
-		records.push(
+		records.data.push(
 			record({
 				sid: 's1',
 				h: 'pi',
@@ -25,6 +25,8 @@ describe('UsageTable', () => {
 				turns: [{ ti: 0, tools: [tool('bash')], totalUsage: usage(250, 0.25) }]
 			})
 		);
+
+		records.loaded = true;
 
 		const target = document.createElement('div');
 		mount(UsageTable, { target });

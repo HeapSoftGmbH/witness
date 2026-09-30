@@ -1,6 +1,8 @@
 import { mount } from 'svelte';
 import { describe, expect, test } from 'vitest';
 
+import { records } from '$lib/stores/records.svelte.ts';
+
 import NameCountChart from './NameCountChart.svelte';
 
 const data = Array.from({ length: 6 }, (_, i) => ({ name: `tool-${i}`, count: 6 - i }));
@@ -9,6 +11,8 @@ const awaitTick = () => new Promise((r) => setTimeout(r, 0));
 
 describe('NameCountChart', () => {
 	test('renders the title and top-n slices', async () => {
+		records.loaded = true;
+
 		const target = document.createElement('div');
 		mount(NameCountChart, {
 			target,
@@ -27,6 +31,8 @@ describe('NameCountChart', () => {
 	});
 
 	test('shows the View all trigger once data exceeds 5 entries', () => {
+		records.loaded = true;
+
 		const few = data.slice(0, 5);
 		const withFew = document.createElement('div');
 		mount(NameCountChart, {

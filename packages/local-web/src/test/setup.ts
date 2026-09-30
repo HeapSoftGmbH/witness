@@ -36,5 +36,6 @@ vi.stubGlobal('matchMedia', (query: string) => ({
 
 // records is a module-level $state singleton shared by every test suite.
 afterEach(() => {
-	records.length = 0;
+	records.data.length = 0;
+	records.loaded = false;
 });

@@ -6,6 +6,7 @@
 	} from 'lib';
 
 	import * as Card from '$lib/components/ui/card/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import { records } from '$lib/stores/records.svelte.ts';
 	import { totalCost, totalTokens } from '$lib/usage';
 	import { getModelFromSourceString } from '$lib/utils';
@@ -19,7 +20,7 @@
 
 	const allTools = $derived(
 		countNames(
-			records.reduce<Record<string, number>>((acc, r) => {
+			records.data.reduce<Record<string, number>>((acc, r) => {
 				for (const t of r.turns)
 					for (const tool of t.tools) acc[tool.name] = (acc[tool.name] ?? 0) + 1;
 				return acc;
@@ -29,7 +30,7 @@
 
 	const allModels = $derived(
 		Object.entries(
-			records.reduce<Record<string, number>>((acc, r) => {
+			records.data.reduce<Record<string, number>>((acc, r) => {
 				acc[r.mod] = (acc[r.mod] ?? 0) + r.turns.length;
 				return acc;
 			}, {})
@@ -40,7 +41,7 @@
 
 	const allSkills = $derived(
 		countNames(
-			records.reduce<Record<string, number>>((acc, r) => {
+			records.data.reduce<Record<string, number>>((acc, r) => {
 				for (const s of r.skills ?? []) acc[s] = (acc[s] ?? 0) + 1;
 				return acc;
 			}, {})
@@ -51,25 +52,28 @@
 		{
 			label: 'Cost',
 			description: 'Total dollars spent in this repository.',
-			value: dollarNumberFormatter.format(records.reduce((n, r) => n + totalCost(r), 0))
+			value: dollarNumberFormatter.format(records.data.reduce((n, r) => n + totalCost(r), 0))
 		},
 		{
 			label: 'Tokens Used',
 			description: 'Total tokens used in this repository.',
-			value: compactNumberFormatter.format(records.reduce((n, r) => n + totalTokens(r), 0))
+			value: compactNumberFormatter.format(records.data.reduce((n, r) => n + totalTokens(r), 0))
 		},
 		{
 			label: 'Tools Used',
 			description: 'Number of distinct tools used.',
 			value: compactNumberFormatter.format(
-				new Set(records.flatMap((r) => r.turns.flatMap((t) => t.tools.map((tool) => tool.name))))
-					.size
+				new Set(
+					records.data.flatMap((r) => r.turns.flatMap((t) => t.tools.map((tool) => tool.name)))
+				).size
 			)
 		},
 		{
 			label: 'Skills Used',
 			description: 'Number of distinct skills used.',
-			value: compactNumberFormatter.format(new Set(records.flatMap((r) => r.skills ?? [])).size)
+			value: compactNumberFormatter.format(
+				new Set(records.data.flatMap((r) => r.skills ?? [])).size
+			)
 		}
 	]);
 </script>
@@ -81,7 +85,11 @@
 				<Card.Title>{s.label}</Card.Title>
 			</Card.Header>
 			<Card.Content>
-				<div class="text-3xl tabular-nums -mt-4">{s.value}</div>
+				{#if records.loaded}
+					<div class="text-3xl tabular-nums -mt-4">{s.value}</div>
+				{:else}
+					<Skeleton class="h-9 w-28 -mt-4" />
+				{/if}
 				<div class="text-xs text-muted-foreground">{s.description}</div>
 			</Card.Content>
 		</Card.Root>

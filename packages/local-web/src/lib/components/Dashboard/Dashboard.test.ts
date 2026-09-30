@@ -8,7 +8,7 @@ import Dashboard from './Dashboard.svelte';
 
 describe('Dashboard', () => {
 	test('renders aggregated stats and chart cards from records', () => {
-		records.push(
+		records.data.push(
 			record({
 				sid: 's1',
 				mod: 'anthropic/claude-sonnet-4',
@@ -22,6 +22,8 @@ describe('Dashboard', () => {
 				skills: ['paraglide']
 			})
 		);
+
+		records.loaded = true;
 
 		const target = document.createElement('div');
 		mount(Dashboard, { target });
@@ -40,5 +42,12 @@ describe('Dashboard', () => {
 		expect(text).toContain('Models');
 		expect(text).toContain('Tools');
 		expect(text).toContain('Skills');
+	});
+
+	test('shows skeletons until records are loaded', () => {
+		const target = document.createElement('div');
+		mount(Dashboard, { target });
+
+		expect(target.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
 	});
 });

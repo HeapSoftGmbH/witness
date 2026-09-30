@@ -9,9 +9,10 @@ vi.stubGlobal(
 );
 
 describe('App', () => {
-	test('renders header, tabs and dashboard records view', () => {
+	test('renders header, tabs and dashboard records view', async () => {
 		const target = document.createElement('div');
 		mount(App, { target });
+		await new Promise((r) => setTimeout(r, 0));
 		const text = target.textContent ?? '';
 		expect(target.querySelector('h1')?.textContent).toBe('Witness');
 		expect(text).toContain('Dashboard');
