@@ -19,7 +19,11 @@
 <main class="container mx-auto p-8">
 	<Tabs.Root value="dashboard">
 		<div class="flex gap-8">
-			<h1 class="mb-6 text-2xl font-semibold">Witness</h1>
+			<div class="flex items-center gap-3">
+				<img src="logo_charcoal.svg" alt="" class="mb-6 h-6 w-auto dark:hidden" />
+				<img src="logo_offwhite.svg" alt="" class="mb-6 hidden h-6 w-auto dark:block" />
+				<h1 class="mb-6 text-2xl font-semibold">Witness</h1>
+			</div>
 			<Tabs.List>
 				<Tabs.Trigger value="dashboard">Dashboard</Tabs.Trigger>
 				<Tabs.Trigger value="sessions">Sessions</Tabs.Trigger>
