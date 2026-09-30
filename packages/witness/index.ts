@@ -34,6 +34,8 @@ export interface AgentTurnRecord {
 	skills?: string[]; // Raw skill names invoked during this session
 	metadata?: object; // Other Agent Specific Data
 	rep: string; // Repository (git remote URL or git root; cwd if not a repo)
+	branch?: string; // Git branch at session start
+	user?: { name: string; email: string }; // Git user config at session start
 }
 
 export class Session {
@@ -50,6 +52,8 @@ export class Session {
 	private readonly path: string;
 	private readonly fileName: string;
 	private readonly rep: string;
+	private readonly branch: string;
+	private readonly user: { name: string; email: string };
 
 	constructor({
 		sessionId,
@@ -63,6 +67,8 @@ export class Session {
 
 		const root = this.gitRoot();
 		this.rep = this.gitRemote() ?? root;
+		this.branch = this.gitBranch();
+		this.user = this.gitUser();
 
 		this.path = join(root, ".witness");
 		this.fileName = "usage.jsonl";
@@ -70,25 +76,32 @@ export class Session {
 		this.loadHistory();
 	}
 
-	private gitRoot(): string {
+	private git(cmd: string): string {
 		try {
-			return execSync("git rev-parse --show-toplevel", {
+			return execSync(cmd, {
 				encoding: "utf8",
+				stdio: ["ignore", "pipe", "ignore"],
 			}).trim();
 		} catch {
-			return process.cwd();
+			return "";
 		}
 	}
 
+	private gitRoot(): string {
+		return this.git("git rev-parse --show-toplevel") || process.cwd();
+	}
+
 	private gitRemote(): string | undefined {
-		try {
-			const url = execSync("git config --get remote.origin.url", {
-				encoding: "utf8",
-			}).trim();
-			return url || undefined;
-		} catch {
-			return undefined;
-		}
+		return this.git("git config --get remote.origin.url") || undefined;
+	}
+
+	private gitBranch(): string {
+		return this.git("git branch --show-current");
+	}
+
+	private gitUser(): { name: string; email: string } {
+		const get = (key: string): string => this.git(`git config --get ${key}`);
+		return { name: get("user.name"), email: get("user.email") };
 	}
 
 	public readRecords(): AgentTurnRecord[] {
@@ -139,6 +152,8 @@ export class Session {
 			h: this.harness,
 			mod: model,
 			rep: this.rep,
+			branch: this.branch,
+			user: this.user,
 			turns: [],
 		};
 	}

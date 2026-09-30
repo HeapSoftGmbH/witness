@@ -17,5 +17,7 @@ describe('App', () => {
 		expect(text).toContain('Dashboard');
 		expect(text).toContain('Sessions');
 		expect(text).toContain('Cost');
+		expect(text).toContain('local repository');
+		expect(text).toContain('Unknown');
 	});
 });
