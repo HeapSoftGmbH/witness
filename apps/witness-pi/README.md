@@ -1,6 +1,6 @@
 # witness-pi
 
-**See what your AI coding agent costs you.**
+Persistant Cost and Usage tracking for your pi agent.
 
 witness-pi is an extension that records the tokens and dollars spent in every pi session and keeps a running total for each repository. You can check your spend at any time, see which models, tools and skills use the most, and find the sessions that cost the most.
 
@@ -65,35 +65,3 @@ pi -e npm:witness-pi
 2. Check the status bar for the running total.
 3. Run `/witness-pi:show` to open the dashboard.
 4. Add `/.witness` to your `.gitignore`, unless you want to commit the usage log so your team can share it.
-
----
-
-## Technical details
-
-### Where data is stored
-
-Usage is written to `<git-root>/.witness/usage.jsonl`. Each line is one JSON record per agent run (one prompt and all of its turns). The repository is identified by its git remote URL. If there is no remote, the git root is used, and if there is no git repo, the current directory.
-
-The file is append-only and uses a shared format, so adapters for other agents (Claude, Copilot, OpenCode; planned) write to the same file. Old lines keep parsing when the format changes, and malformed lines are skipped.
-
-### When data is written
-
-Turns are kept in memory and written in a single append when pi goes idle (`agent_settled`) and when pi shuts down. This keeps writes safe when several pi sessions run on the same repo at once. The trade-off: if pi is killed hard (e.g. `kill -9`), the current unsaved run is lost.
-
-### Dashboard server
-
-`/witness-pi:show` starts a small HTTP server on `127.0.0.1:4444`. It is reachable only from your own machine. The server serves the bundled viewer and a `/api/records` endpoint that returns the records for the current repo. It stops when the pi session ends.
-
-### Development
-
-This package lives in the [witness](https://github.com/HeapSoftGmbH/witness) monorepo.
-
-```bash
-bun install
-bun test        # unit tests for the adapter
-bun run build   # bundles extension + local-web viewer into dist/
-```
-
-- `extensions/index.ts`: the pi extension (maps pi events to witness)
-- `packages/witness`: core `Session` class, storage and shared types
-- `packages/local-web`: the dashboard UI

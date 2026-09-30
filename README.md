@@ -13,6 +13,26 @@ $ cat .witness/usage.jsonl
 - **Harness-agnostic**: the storage layer (`packages/witness`) knows nothing about pi/Claude/Copilot/OpenCode; each `apps/*` package is a thin adapter that maps its harness's events onto the same `Session` API.
 - **Append-only schema**: short keys, never renamed — new fields may be added, old lines always parse.
 
+## Agents
+
+### PI
+
+#### Technical details
+
+##### Where data is stored
+
+Usage is written to `<git-root>/.witness/usage.jsonl` (override with `WITNESS_DIR`). Each line is one JSON record per agent run — one prompt and all of its turns. The repository is identified by its git remote URL; if there is no remote, the git root is used, and if there is no git repo, the current directory.
+
+The file is append-only and uses a shared format, so adapters for other agents (Claude, Copilot, OpenCode; planned) write to the same file. Old lines keep parsing when the format changes, and malformed lines are skipped.
+
+##### When data is written
+
+Turns are kept in memory and written in a single append when the agent goes idle and when it shuts down. This keeps writes safe when several agent sessions run on the same repo at once. The trade-off: if the agent is killed hard (e.g. `kill -9`), the current unsaved run is lost.
+
+##### Dashboard server
+
+`/witness-pi:show` starts a small HTTP server on `127.0.0.1:4444`, reachable only from your own machine. It serves the bundled viewer and an `/api/records` endpoint that returns the records for the current repo. It stops when the session ends.
+
 ## Install (pi)
 
 From git (once this repo has a public remote):
@@ -62,9 +82,16 @@ bun test
 bun run lint
 ```
 
+Building the pi extension (bundles extension + local-web viewer into `dist/`):
+
+```bash
+cd apps/witness-pi
+bun run build
+```
+
 Bun workspaces monorepo:
 
 - `packages/witness` — core `Session` class (record schema, storage, repo totals)
 - `packages/types` — shared `Usage` / `Tool` / `AgentTurnRecord` interfaces
-- `apps/witness-pi` — pi extension
-- `apps/local-web` — local viewer (placeholder)
+- `apps/witness-pi` — pi extension (`extensions/index.ts` maps pi events to `Session`)
+- `apps/local-web` — the dashboard UI
