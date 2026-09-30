@@ -36,3 +36,15 @@ export function getRepoName(remote: string | undefined | null): string {
 		.replace(/\.git$/, '');
 	return clean || 'local repository';
 }
+
+/**
+ * Web URL for a git remote (https or git@ssh form), or null when there is no remote.
+ * Normalizes to https and drops .git / auth suffix.
+ */
+export function getRepoUrl(remote: string | undefined | null): string | null {
+	const s = (remote ?? '').trim();
+	let m = s.match(/^[^@/\s]+@([^:]+):(.+)$/); // git@github.com:owner/repo
+	if (!m) m = s.match(/^(?:https?|ssh|git):\/\/(?:[^@/]+@)?([^/]+)\/(.+)$/); // https://github.com/owner/repo
+	if (!m) return null; // local path (no remote)
+	return `https://${m[1]}/${m[2].replace(/\.git$/, '')}`;
+}

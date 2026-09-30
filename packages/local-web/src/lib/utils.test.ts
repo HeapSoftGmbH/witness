@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest';
 
-import { getModelFromSourceString, getRepoName } from './utils';
+import { getModelFromSourceString, getRepoName, getRepoUrl } from './utils';
 
 describe('getModelFromSourceString', () => {
 	test('extracts model from provider/model', () => {
@@ -32,5 +32,25 @@ describe('getRepoName', () => {
 	test('returns placeholder when there is no remote', () => {
 		expect(getRepoName('')).toBe('local repository');
 		expect(getRepoName(undefined)).toBe('local repository');
+	});
+});
+
+describe('getRepoUrl', () => {
+	test('normalizes an https remote to a web URL', () => {
+		expect(getRepoUrl('https://github.com/HeapSoftGmbH/witness.git')).toBe(
+			'https://github.com/HeapSoftGmbH/witness'
+		);
+	});
+
+	test('normalizes an ssh remote to a web URL', () => {
+		expect(getRepoUrl('git@github.com:HeapSoftGmbH/witness.git')).toBe(
+			'https://github.com/HeapSoftGmbH/witness'
+		);
+	});
+
+	test('returns null when there is no remote', () => {
+		expect(getRepoUrl('')).toBeNull();
+		expect(getRepoUrl(undefined)).toBeNull();
+		expect(getRepoUrl('/Users/me/projects/thing')).toBeNull();
 	});
 });
