@@ -3,11 +3,6 @@
 Token & cost tracking for AI coding agents — one append-only usage log per repo,
 written by a small extension for each agent harness.
 
-```
-$ cat .witness/usage.jsonl
-{"t":"…","sid":"…","sn":"…","h":"pi","mod":"anthropic/claude-…","rep":"git@github.com:me/app.git","turns":[{"ti":0,"tools":[…],"totalUsage":{"in":…,"out":…,"cw":…,"cr":…,"tok":…,"reason":…,"cst":…}}],"metadata":{}}
-```
-
 - **Per-repo**: data lives in `<git-root>/.witness/usage.jsonl` (override with `WITNESS_DIR`). Keyed by git remote URL, so totals accumulate across sessions — restarts included.
 - **Per-turn breakdown**: input/output/cache/reasoning tokens, cost, and per-tool usage + errors, per turn.
 - **Harness-agnostic**: the storage layer (`packages/witness`) knows nothing about pi/Claude/Copilot/OpenCode; each `apps/*` package is a thin adapter that maps its harness's events onto the same `Session` API.

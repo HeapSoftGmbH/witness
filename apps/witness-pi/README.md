@@ -1,6 +1,8 @@
 # witness-pi
 
-Persistant Cost and Usage tracking for your pi agent.
+[![npm version](https://img.shields.io/npm/v/witness-pi?label=npm)](https://www.npmjs.com/package/witness-pi) [![source](https://img.shields.io/badge/source-GitHub-blue)](https://github.com/HeapSoftGmbH/witness)
+
+Persistent agent Analytics. Cost & usage tracking for your pi agent. Including models, provider, tokens, cost, skills, tools.
 
 witness-pi is an extension that records the tokens and dollars spent in every pi session and keeps a running total for each repository. You can check your spend at any time, see which models, tools and skills use the most, and find the sessions that cost the most.
 
@@ -58,6 +60,15 @@ To try it for one session without installing:
 ```bash
 pi -e npm:witness-pi
 ```
+
+Or install the same extension from source:
+
+```bash
+pi install git:github.com/HeapSoftGmbH/witness
+```
+
+> [!IMPORTANT]
+> Pi extensions run with your full user permissions. Review the source before installing anything from a third party.
 
 ## Usage
 
