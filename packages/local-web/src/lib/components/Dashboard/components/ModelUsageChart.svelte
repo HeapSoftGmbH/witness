@@ -23,8 +23,14 @@
 		$props();
 
 	// series per model, ordered alphabetically by model name
+	// only models with usage inside the 7-day window: an unused model would render as a flat zero line
 	const models = $derived.by(() => {
+		const today = new SvelteDate();
+		const windowStart = new SvelteDate(today);
+		windowStart.setUTCDate(windowStart.getUTCDate() - 6);
+		const cutoff = windowStart.toISOString().slice(0, 10);
 		const totals = records.data.reduce<Record<string, number>>((acc, r) => {
+			if (r.t.slice(0, 10) < cutoff) return acc;
 			acc[r.mod] = (acc[r.mod] ?? 0) + value(r);
 			return acc;
 		}, {});

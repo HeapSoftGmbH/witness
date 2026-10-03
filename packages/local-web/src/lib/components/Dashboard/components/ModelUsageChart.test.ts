@@ -33,4 +33,36 @@ describe('ModelUsageChart', () => {
 		await awaitTick();
 		expect(target.querySelector('svg')).toBeTruthy();
 	});
+
+	test('only includes models used inside the 7-day window', async () => {
+		const now = new Date();
+		const old = new Date(now);
+		old.setUTCDate(old.getUTCDate() - 8);
+		records.data.push(
+			record({
+				mod: 'anthropic/claude-opus-4',
+				t: old.toISOString(),
+				turns: [{ ti: 0, tools: [tool('read')], totalUsage: usage(1000, 1) }]
+			}),
+			record({
+				mod: 'anthropic/claude-sonnet-4',
+				t: now.toISOString(),
+				turns: [{ ti: 0, tools: [tool('read')], totalUsage: usage(1000, 1) }]
+			})
+		);
+
+		records.loaded = true;
+
+		const target = document.createElement('div');
+		mount(ModelUsageChart, {
+			target,
+			props: {
+				value: (r: AgentTurnRecord) => r.turns[0].totalUsage.tok,
+				format: (n: number) => String(n)
+			}
+		});
+
+		await awaitTick();
+		expect(target.querySelectorAll('.lc-area-path').length).toBe(1);
+	});
 });
