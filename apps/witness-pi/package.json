@@ -15,7 +15,7 @@
 		"url": "https://github.com/HeapSoftGmbH/witness"
 	},
 	"scripts": {
-		"build": "bun run --cwd ../.. build:web && bun build extensions/index.ts --outdir dist --target=bun && rm -rf dist/local-web && cp -r ../../packages/local-web/dist dist/local-web",
+		"build": "bun run --cwd ../.. build:web && bun build extensions/index.ts --outdir dist --target=bun --external @earendil-works/pi-coding-agent && rm -rf dist/local-web && cp -r ../../packages/local-web/dist dist/local-web",
 		"prepack": "bun run build"
 	},
 	"devDependencies": {
