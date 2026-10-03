@@ -29,6 +29,7 @@ export interface AgentTurnRecord {
 	sid: string; // Session Id
 	sn: string; // Session Name
 	h: string; // Harness
+	hv?: string; // Harness Version
 	mod: string; // Model
 	turns: Turn[]; // Agent Turns
 	skills?: string[]; // Raw skill names invoked during this session
@@ -49,6 +50,7 @@ export class Session {
 	private metadata: Record<string, unknown> = {};
 	private skills: string[] = [];
 	private readonly harness: string = "";
+	private readonly harnessVersion?: string;
 	private readonly path: string;
 	private readonly fileName: string;
 	private readonly rep: string;
@@ -58,12 +60,15 @@ export class Session {
 	constructor({
 		sessionId,
 		harness,
+		harnessVersion,
 	}: {
 		sessionId: string;
 		harness: string;
+		harnessVersion?: string;
 	}) {
 		this.sessionId = sessionId;
 		this.harness = harness;
+		this.harnessVersion = harnessVersion;
 
 		const root = this.gitRoot();
 		this.rep = this.gitRemote() ?? root;
@@ -151,6 +156,7 @@ export class Session {
 			sn: this.sessionName,
 			h: this.harness,
 			mod: model,
+			hv: this.harnessVersion,
 			rep: this.rep,
 			branch: this.branch,
 			user: this.user,

@@ -44,6 +44,7 @@
 		t: string;
 		sid: string;
 		h: string;
+		hv?: string;
 		mod: string;
 		turns: number;
 		tools: number;
@@ -52,12 +53,18 @@
 		cost: number;
 	};
 
+	// Session name resolved per session id: any turn with a name, names the whole session.
+	const sessionNames = $derived(
+		new Map(records.data.filter((r) => r.sn).map((r) => [r.sid, r.sn] as const))
+	);
+
 	const rows = $derived(
 		records.data
 			.map((r) => ({
 				t: r.t,
 				sid: r.sid,
 				h: r.h,
+				hv: r.hv,
 				mod: r.mod,
 				turns: r.turns.length,
 				tools: totalToolCount(r),
@@ -139,6 +146,8 @@
 		const vals = [...new Set(row.subRows.map((r) => r.original[key]))];
 		return vals.length === 1 ? vals[0] : '—';
 	};
+
+	const sessionLabel = (sid: string) => sessionNames.get(sid) ?? sid;
 </script>
 
 {#snippet sortIcon(column: Column<Features, UsageRow>)}
@@ -166,7 +175,11 @@
 		<RiArrowRightSLine
 			class={cn('size-4 shrink-0 transition-transform', row.getIsExpanded() && 'rotate-90')}
 		/>
-		{String(row.getValue(row.groupingColumnId ?? ''))}
+		{#if row.groupingColumnId === 'sid'}
+			{sessionLabel(uniqueValue(row, 'sid'))}
+		{:else}
+			{String(row.getValue(row.groupingColumnId ?? ''))}
+		{/if}
 		<span class="font-normal text-muted-foreground">({row.subRows.length})</span>
 	</button>
 {/snippet}
@@ -230,7 +243,7 @@
 							{#if row.groupingColumnId === 'sid'}
 								{@render groupCell(row)}
 							{:else}
-								{uniqueValue(row, 'sid')}
+								{sessionLabel(uniqueValue(row, 'sid'))}
 							{/if}
 						</Table.Cell>
 						<Table.Cell class="text-muted-foreground">
@@ -263,10 +276,15 @@
 				{:else}
 					<Table.Row class="bg-accent">
 						<Table.Cell class="font-mono text-xs overflow-hidden text-clip pl-8">
-							{row.original.sid}
+							{sessionLabel(row.original.sid)}
 						</Table.Cell>
 						<Table.Cell>{new Date(row.original.t).toLocaleString()}</Table.Cell>
-						<Table.Cell>{row.original.h}</Table.Cell>
+						<Table.Cell>
+							{row.original.h}
+							{#if row.original.hv}
+								<span class="text-muted-foreground"> v{row.original.hv}</span>
+							{/if}
+						</Table.Cell>
 						<Table.Cell>{row.original.mod}</Table.Cell>
 						<Table.Cell class="text-right">{row.original.turns}</Table.Cell>
 						<Table.Cell class="text-right">{row.original.tools}</Table.Cell>

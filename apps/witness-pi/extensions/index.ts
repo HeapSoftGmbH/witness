@@ -1,11 +1,12 @@
-import { spawn } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { createServer, type Server } from "node:http";
 import { dirname, extname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import type {
-	ExtensionAPI,
-	ExtensionContext,
+import {
+	type ExtensionAPI,
+	type ExtensionContext,
+	VERSION,
 } from "@earendil-works/pi-coding-agent";
 import { compactNumberFormatter, dollarNumberFormatter } from "lib";
 import { Session, type Tool, type Usage } from "witness";
@@ -16,6 +17,22 @@ export default function main(pi: ExtensionAPI) {
 	let session: Session;
 	let ctx: ExtensionContext;
 	let server: Server | undefined;
+	let piVersion: string | undefined;
+
+	function harnessVersion(): string {
+		if (!piVersion) {
+			try {
+				piVersion =
+					execSync("pi --version", {
+						encoding: "utf8",
+						stdio: ["ignore", "pipe", "ignore"],
+					}).trim() || undefined;
+			} catch {
+				piVersion = undefined;
+			}
+		}
+		return piVersion ?? VERSION;
+	}
 
 	function toUsage(u?: {
 		input?: number;
@@ -52,6 +69,7 @@ export default function main(pi: ExtensionAPI) {
 		session = new Session({
 			sessionId: ctx.sessionManager.getSessionId(),
 			harness: "pi",
+			harnessVersion: piVersion ?? harnessVersion(),
 		});
 		session.addMetadata({ start_reason: event.reason });
 		renderStatus();

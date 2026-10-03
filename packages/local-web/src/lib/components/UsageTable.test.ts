@@ -11,6 +11,7 @@ describe('UsageTable', () => {
 		records.data.push(
 			record({
 				sid: 's1',
+				sn: 'My session',
 				h: 'pi',
 				mod: 'anthropic/claude-sonnet-4',
 				turns: [
@@ -20,9 +21,18 @@ describe('UsageTable', () => {
 			}),
 			record({
 				sid: 's2',
+				sn: '',
 				h: 'opencode',
 				mod: 'openai/gpt-5',
 				turns: [{ ti: 0, tools: [tool('bash')], totalUsage: usage(250, 0.25) }]
+			}),
+			// same session, later turn without a name — session name still applies
+			record({
+				sid: 's1',
+				sn: '',
+				h: 'pi',
+				mod: 'anthropic/claude-sonnet-4',
+				turns: [{ ti: 0, tools: [tool('bash')], totalUsage: usage(100, 0.1) }]
 			})
 		);
 
@@ -32,14 +42,15 @@ describe('UsageTable', () => {
 		mount(UsageTable, { target });
 		const text = target.textContent ?? '';
 
-		expect(text).toContain('s1');
+		expect(text).toContain('My session');
+		expect(text).not.toContain('s1');
+		expect(text).not.toContain('—');
 		expect(text).toContain('s2');
 		expect(text).toContain('pi');
 		expect(text).toContain('opencode');
 
-		// computed per-session totals (compact tokens, 4-fraction dollar cost)
-		expect(text).toContain('1.5K');
-		expect(text).toContain('$1.50');
+		expect(text).toContain('1.6K');
+		expect(text).toContain('$1.60');
 		expect(text).toContain('$0.25');
 	});
 });
