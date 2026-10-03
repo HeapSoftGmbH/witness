@@ -12,6 +12,7 @@ describe('UsageTable', () => {
 			record({
 				sid: 's1',
 				sn: 'My session',
+				branch: 'main',
 				h: 'pi',
 				mod: 'anthropic/claude-sonnet-4',
 				turns: [
@@ -22,6 +23,7 @@ describe('UsageTable', () => {
 			record({
 				sid: 's2',
 				sn: '',
+				branch: 'feat/x',
 				h: 'opencode',
 				mod: 'openai/gpt-5',
 				turns: [{ ti: 0, tools: [tool('bash')], totalUsage: usage(250, 0.25) }]
@@ -30,6 +32,7 @@ describe('UsageTable', () => {
 			record({
 				sid: 's1',
 				sn: '',
+				branch: 'main',
 				h: 'pi',
 				mod: 'anthropic/claude-sonnet-4',
 				turns: [{ ti: 0, tools: [tool('bash')], totalUsage: usage(100, 0.1) }]
@@ -45,6 +48,8 @@ describe('UsageTable', () => {
 		expect(text).toContain('My session');
 		expect(text).not.toContain('s1');
 		expect(text).not.toContain('—');
+		expect(text).toContain('main');
+		expect(text).toContain('feat/x');
 		expect(text).toContain('s2');
 		expect(text).toContain('pi');
 		expect(text).toContain('opencode');

@@ -43,6 +43,7 @@
 	type UsageRow = {
 		t: string;
 		sid: string;
+		b: string;
 		h: string;
 		hv?: string;
 		mod: string;
@@ -63,6 +64,7 @@
 			.map((r) => ({
 				t: r.t,
 				sid: r.sid,
+				b: r.branch ?? '',
 				h: r.h,
 				hv: r.hv,
 				mod: r.mod,
@@ -95,6 +97,11 @@
 	const columns = columnHelper.columns([
 		columnHelper.accessor('t', { header: 'Time', aggregationFn: 'first' }),
 		columnHelper.accessor('sid', { header: 'Session', enableSorting: false }),
+		columnHelper.accessor('b', {
+			header: 'Branch',
+			enableSorting: false,
+			filterFn: 'includesString'
+		}),
 		columnHelper.accessor('h', {
 			header: 'Harness',
 			enableSorting: false,
@@ -142,7 +149,7 @@
 		onGroupingChange: setGrouping
 	});
 
-	const uniqueValue = (row: Row<Features, UsageRow>, key: 'sid' | 'h' | 'mod') => {
+	const uniqueValue = (row: Row<Features, UsageRow>, key: 'sid' | 'b' | 'h' | 'mod') => {
 		const vals = [...new Set(row.subRows.map((r) => r.original[key]))];
 		return vals.length === 1 ? vals[0] : '—';
 	};
@@ -224,6 +231,7 @@
 	<Table.Header>
 		<Table.Row>
 			<Table.Head>Session</Table.Head>
+			<Table.Head>Branch</Table.Head>
 			<Table.Head>{@render sortHeader('t', 'Time')}</Table.Head>
 			<Table.Head>Harness</Table.Head>
 			<Table.Head>Model</Table.Head>
@@ -245,6 +253,9 @@
 							{:else}
 								{sessionLabel(uniqueValue(row, 'sid'))}
 							{/if}
+						</Table.Cell>
+						<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
+							{uniqueValue(row, 'b') || '—'}
 						</Table.Cell>
 						<Table.Cell class="text-muted-foreground">
 							{new Date(row.getValue('t') as string).toLocaleString()}
@@ -278,6 +289,9 @@
 						<Table.Cell class="font-mono text-xs overflow-hidden text-clip pl-8">
 							{sessionLabel(row.original.sid)}
 						</Table.Cell>
+						<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
+							{row.original.b || '—'}
+						</Table.Cell>
 						<Table.Cell>{new Date(row.original.t).toLocaleString()}</Table.Cell>
 						<Table.Cell>
 							{row.original.h}
@@ -302,6 +316,7 @@
 			{#each [0, 1, 2, 3, 4] as n (n)}
 				<Table.Row>
 					<Table.Cell class="font-mono text-xs"><Skeleton class="h-4 w-28" /></Table.Cell>
+					<Table.Cell class="font-mono text-xs"><Skeleton class="h-4 w-16" /></Table.Cell>
 					<Table.Cell><Skeleton class="h-4 w-36" /></Table.Cell>
 					<Table.Cell><Skeleton class="h-4 w-14" /></Table.Cell>
 					<Table.Cell><Skeleton class="h-4 w-48" /></Table.Cell>
