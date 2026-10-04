@@ -14,7 +14,7 @@
     },
     "apps/witness-pi": {
       "name": "witness-pi",
-      "version": "0.0.14",
+      "version": "0.0.17",
       "devDependencies": {
         "@types/bun": "^1.4.2",
         "lib": "workspace:*",

@@ -15,6 +15,7 @@
 		aggregationFn_sum,
 		columnFilteringFeature,
 		columnGroupingFeature,
+		columnVisibilityFeature,
 		createColumnHelper,
 		createExpandedRowModel,
 		createFilteredRowModel,
@@ -32,6 +33,7 @@
 	} from '@tanstack/svelte-table';
 
 	import { Button } from '$lib/components/ui/button/index.js';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
 	import { Input } from '$lib/components/ui/input/index.js';
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import * as Table from '$lib/components/ui/table/index.js';
@@ -52,6 +54,18 @@
 		skills: number;
 		tokens: number;
 		cost: number;
+	};
+
+	const columnLabels: Record<string, string> = {
+		t: 'Time',
+		b: 'Branch',
+		h: 'Harness',
+		mod: 'Model',
+		turns: 'Turns',
+		tools: 'Tools',
+		skills: 'Skills',
+		tokens: 'Tokens',
+		cost: 'Cost'
 	};
 
 	// Session name resolved per session id: any turn with a name, names the whole session.
@@ -80,6 +94,7 @@
 	const features = tableFeatures({
 		columnFilteringFeature,
 		columnGroupingFeature,
+		columnVisibilityFeature,
 		rowAggregationFeature,
 		rowExpandingFeature,
 		rowSortingFeature,
@@ -96,7 +111,7 @@
 	const columnHelper = createColumnHelper<Features, UsageRow>();
 	const columns = columnHelper.columns([
 		columnHelper.accessor('t', { header: 'Time', aggregationFn: 'first' }),
-		columnHelper.accessor('sid', { header: 'Session', enableSorting: false }),
+		columnHelper.accessor('sid', { header: 'Session', enableSorting: false, enableHiding: false }),
 		columnHelper.accessor('b', {
 			header: 'Branch',
 			enableSorting: false,
@@ -112,12 +127,14 @@
 			id: 'provider',
 			enableSorting: false,
 			enableGrouping: false,
+			enableHiding: false,
 			filterFn: 'includesString'
 		}),
 		columnHelper.accessor((row) => getModelFromSourceString(row.mod), {
 			id: 'model',
 			enableSorting: false,
 			enableGrouping: false,
+			enableHiding: false,
 			filterFn: 'includesString'
 		}),
 		columnHelper.accessor('turns', { header: 'Turns', aggregationFn: 'sum' }),
@@ -148,6 +165,14 @@
 		},
 		onGroupingChange: setGrouping
 	});
+
+	const hideableColumns = $derived(table.getAllColumns().filter((c) => c.getCanHide()));
+	const visibleCount = $derived(hideableColumns.filter((c) => c.getIsVisible()).length);
+	const columnsLabel = $derived(
+		visibleCount === hideableColumns.length
+			? 'All columns'
+			: `${visibleCount} of ${hideableColumns.length} columns`
+	);
 
 	const uniqueValue = (row: Row<Features, UsageRow>, key: 'sid' | 'b' | 'h' | 'mod') => {
 		const vals = [...new Set(row.subRows.map((r) => r.original[key]))];
@@ -218,6 +243,27 @@
 		</ToggleGroup.Root>
 	</div>
 	<div>
+		<div class="text-sm text-muted-foreground mb-1">Columns:</div>
+		<DropdownMenu.Root>
+			<DropdownMenu.Trigger>
+				{#snippet child({ props })}
+					<Button {...props} variant="outline" class="w-35 justify-start" size="sm"
+						>{columnsLabel}</Button
+					>
+				{/snippet}
+			</DropdownMenu.Trigger>
+			<DropdownMenu.Content align="end">
+				{#each table.getAllColumns().filter((col) => col.getCanHide()) as column (column.id)}
+					<DropdownMenu.CheckboxItem
+						bind:checked={() => column.getIsVisible(), (v) => column.toggleVisibility(!!v)}
+					>
+						{columnLabels[column.id] ?? column.id}
+					</DropdownMenu.CheckboxItem>
+				{/each}
+			</DropdownMenu.Content>
+		</DropdownMenu.Root>
+	</div>
+	<div>
 		<div class="text-sm text-muted-foreground mb-1">Filter:</div>
 		<div class="flex gap-2">
 			{@render filterInput('h', 'Harness…')}
@@ -231,15 +277,33 @@
 	<Table.Header>
 		<Table.Row>
 			<Table.Head>Session</Table.Head>
-			<Table.Head>Branch</Table.Head>
-			<Table.Head>{@render sortHeader('t', 'Time')}</Table.Head>
-			<Table.Head>Harness</Table.Head>
-			<Table.Head>Model</Table.Head>
-			<Table.Head class="text-right">{@render sortHeader('turns', 'Turns')}</Table.Head>
-			<Table.Head class="text-right">{@render sortHeader('tools', 'Tools')}</Table.Head>
-			<Table.Head class="text-right">{@render sortHeader('skills', 'Skills')}</Table.Head>
-			<Table.Head class="text-right">{@render sortHeader('tokens', 'Tokens')}</Table.Head>
-			<Table.Head class="text-right">{@render sortHeader('cost', 'Cost')}</Table.Head>
+			{#if table.getColumn('b')?.getIsVisible()}
+				<Table.Head>Branch</Table.Head>
+			{/if}
+			{#if table.getColumn('t')?.getIsVisible()}
+				<Table.Head>{@render sortHeader('t', 'Time')}</Table.Head>
+			{/if}
+			{#if table.getColumn('h')?.getIsVisible()}
+				<Table.Head>Harness</Table.Head>
+			{/if}
+			{#if table.getColumn('mod')?.getIsVisible()}
+				<Table.Head>Model</Table.Head>
+			{/if}
+			{#if table.getColumn('turns')?.getIsVisible()}
+				<Table.Head class="text-right">{@render sortHeader('turns', 'Turns')}</Table.Head>
+			{/if}
+			{#if table.getColumn('tools')?.getIsVisible()}
+				<Table.Head class="text-right">{@render sortHeader('tools', 'Tools')}</Table.Head>
+			{/if}
+			{#if table.getColumn('skills')?.getIsVisible()}
+				<Table.Head class="text-right">{@render sortHeader('skills', 'Skills')}</Table.Head>
+			{/if}
+			{#if table.getColumn('tokens')?.getIsVisible()}
+				<Table.Head class="text-right">{@render sortHeader('tokens', 'Tokens')}</Table.Head>
+			{/if}
+			{#if table.getColumn('cost')?.getIsVisible()}
+				<Table.Head class="text-right">{@render sortHeader('cost', 'Cost')}</Table.Head>
+			{/if}
 		</Table.Row>
 	</Table.Header>
 	<Table.Body>
@@ -254,61 +318,97 @@
 								{sessionLabel(uniqueValue(row, 'sid'))}
 							{/if}
 						</Table.Cell>
-						<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
-							{uniqueValue(row, 'b') || '—'}
-						</Table.Cell>
-						<Table.Cell class="text-muted-foreground">
-							{new Date(row.getValue('t') as string).toLocaleString()}
-						</Table.Cell>
-						<Table.Cell>
-							{#if row.groupingColumnId === 'h'}
-								{@render groupCell(row)}
-							{:else}
-								{uniqueValue(row, 'h')}
-							{/if}
-						</Table.Cell>
-						<Table.Cell>
-							{#if row.groupingColumnId === 'mod'}
-								{@render groupCell(row)}
-							{:else}
-								{uniqueValue(row, 'mod')}
-							{/if}
-						</Table.Cell>
-						<Table.Cell class="text-right font-medium">{row.getValue('turns')}</Table.Cell>
-						<Table.Cell class="text-right font-medium">{row.getValue('tools')}</Table.Cell>
-						<Table.Cell class="text-right font-medium">{row.getValue('skills')}</Table.Cell>
-						<Table.Cell class="text-right font-medium">
-							{compactNumberFormatter.format(row.getValue('tokens') as number)}
-						</Table.Cell>
-						<Table.Cell class="text-right font-medium">
-							{dollarNumberFormatterWith4Fracts.format(row.getValue('cost') as number)}
-						</Table.Cell>
+						{#if table.getColumn('b')?.getIsVisible()}
+							<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
+								{uniqueValue(row, 'b') || '—'}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('t')?.getIsVisible()}
+							<Table.Cell class="text-muted-foreground">
+								{new Date(row.getValue('t') as string).toLocaleString()}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('h')?.getIsVisible()}
+							<Table.Cell>
+								{#if row.groupingColumnId === 'h'}
+									{@render groupCell(row)}
+								{:else}
+									{uniqueValue(row, 'h')}
+								{/if}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('mod')?.getIsVisible()}
+							<Table.Cell>
+								{#if row.groupingColumnId === 'mod'}
+									{@render groupCell(row)}
+								{:else}
+									{uniqueValue(row, 'mod')}
+								{/if}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('turns')?.getIsVisible()}
+							<Table.Cell class="text-right font-medium">{row.getValue('turns')}</Table.Cell>
+						{/if}
+						{#if table.getColumn('tools')?.getIsVisible()}
+							<Table.Cell class="text-right font-medium">{row.getValue('tools')}</Table.Cell>
+						{/if}
+						{#if table.getColumn('skills')?.getIsVisible()}
+							<Table.Cell class="text-right font-medium">{row.getValue('skills')}</Table.Cell>
+						{/if}
+						{#if table.getColumn('tokens')?.getIsVisible()}
+							<Table.Cell class="text-right font-medium">
+								{compactNumberFormatter.format(row.getValue('tokens') as number)}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('cost')?.getIsVisible()}
+							<Table.Cell class="text-right font-medium">
+								{dollarNumberFormatterWith4Fracts.format(row.getValue('cost') as number)}
+							</Table.Cell>
+						{/if}
 					</Table.Row>
 				{:else}
 					<Table.Row class="bg-accent">
 						<Table.Cell class="font-mono text-xs overflow-hidden text-clip pl-8">
 							{sessionLabel(row.original.sid)}
 						</Table.Cell>
-						<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
-							{row.original.b || '—'}
-						</Table.Cell>
-						<Table.Cell>{new Date(row.original.t).toLocaleString()}</Table.Cell>
-						<Table.Cell>
-							{row.original.h}
-							{#if row.original.hv}
-								<span class="text-muted-foreground"> v{row.original.hv}</span>
-							{/if}
-						</Table.Cell>
-						<Table.Cell>{row.original.mod}</Table.Cell>
-						<Table.Cell class="text-right">{row.original.turns}</Table.Cell>
-						<Table.Cell class="text-right">{row.original.tools}</Table.Cell>
-						<Table.Cell class="text-right">{row.original.skills}</Table.Cell>
-						<Table.Cell class="text-right">
-							{compactNumberFormatter.format(row.original.tokens)}
-						</Table.Cell>
-						<Table.Cell class="text-right">
-							{dollarNumberFormatterWith4Fracts.format(row.original.cost)}
-						</Table.Cell>
+						{#if table.getColumn('b')?.getIsVisible()}
+							<Table.Cell class="font-mono text-xs overflow-hidden text-clip">
+								{row.original.b || '—'}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('t')?.getIsVisible()}
+							<Table.Cell>{new Date(row.original.t).toLocaleString()}</Table.Cell>
+						{/if}
+						{#if table.getColumn('h')?.getIsVisible()}
+							<Table.Cell>
+								{row.original.h}
+								{#if row.original.hv}
+									<span class="text-muted-foreground"> v{row.original.hv}</span>
+								{/if}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('mod')?.getIsVisible()}
+							<Table.Cell>{row.original.mod}</Table.Cell>
+						{/if}
+						{#if table.getColumn('turns')?.getIsVisible()}
+							<Table.Cell class="text-right">{row.original.turns}</Table.Cell>
+						{/if}
+						{#if table.getColumn('tools')?.getIsVisible()}
+							<Table.Cell class="text-right">{row.original.tools}</Table.Cell>
+						{/if}
+						{#if table.getColumn('skills')?.getIsVisible()}
+							<Table.Cell class="text-right">{row.original.skills}</Table.Cell>
+						{/if}
+						{#if table.getColumn('tokens')?.getIsVisible()}
+							<Table.Cell class="text-right">
+								{compactNumberFormatter.format(row.original.tokens)}
+							</Table.Cell>
+						{/if}
+						{#if table.getColumn('cost')?.getIsVisible()}
+							<Table.Cell class="text-right">
+								{dollarNumberFormatterWith4Fracts.format(row.original.cost)}
+							</Table.Cell>
+						{/if}
 					</Table.Row>
 				{/if}
 			{/each}
