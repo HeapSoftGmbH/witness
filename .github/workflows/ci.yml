@@ -73,8 +73,11 @@ jobs:
       - name: build release notes
         run: |
           PREFIX="${APP}-v*"
-          TAGS="$(git tag --sort=-version:refname --list "$PREFIX")"
-          PREV="$(echo "$TAGS" | sed -n '2p')"
+          TAGS="$(git tag --sort=version:refname --list "$PREFIX")"
+          PREV="$(echo "$TAGS" | tail -n 2 | head -n 1)"
+          if [ "$PREV" = "$APP-v$VERSION" ]; then
+            PREV=""
+          fi
           if [ -n "$PREV" ]; then
             RANGE="$PREV..HEAD"
           else
