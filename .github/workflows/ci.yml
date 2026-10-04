@@ -45,6 +45,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          fetch-depth: 0
 
       - name: setup bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
@@ -68,10 +70,28 @@ jobs:
           echo "app=$APP" >> "$GITHUB_ENV"
           echo "version=$VERSION" >> "$GITHUB_ENV"
 
+      - name: build release notes
+        run: |
+          PREFIX="${APP}-v*"
+          TAGS="$(git tag --sort=-version:refname --list "$PREFIX")"
+          PREV="$(echo "$TAGS" | sed -n '2p')"
+          if [ -n "$PREV" ]; then
+            RANGE="$PREV..HEAD"
+          else
+            RANGE="HEAD"
+          fi
+          {
+            echo "## What changed in $APP v$VERSION"
+            echo
+            git log --no-merges --pretty=format:'- %s' "$RANGE"
+            echo
+          } > release_notes.md
+
       - name: create github release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
         with:
           name: "${{ env.app }} v${{ env.version }}"
+          body_path: release_notes.md
 
       - name: publish
         working-directory: apps/${{ env.app }}
