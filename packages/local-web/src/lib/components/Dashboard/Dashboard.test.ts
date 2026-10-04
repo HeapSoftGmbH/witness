@@ -6,6 +6,8 @@ import { records } from '$lib/stores/records.svelte.ts';
 import { record, tool, usage } from '../../../test/fixtures';
 import Dashboard from './Dashboard.svelte';
 
+const awaitTick = () => new Promise((r) => setTimeout(r, 0));
+
 describe('Dashboard', () => {
 	test('renders aggregated stats and chart cards from records', () => {
 		records.data.push(
@@ -49,5 +51,44 @@ describe('Dashboard', () => {
 		mount(Dashboard, { target });
 
 		expect(target.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
+	});
+
+	test('aggregates tools, models and skills with per-turn weighting, sorted by count', async () => {
+		records.data.push(
+			record({
+				sid: 's1',
+				mod: 'anthropic/claude-sonnet-4',
+				turns: [
+					{ ti: 0, tools: [tool('read'), tool('edit'), tool('bash')], totalUsage: usage(1) },
+					{ ti: 1, tools: [tool('read'), tool('edit')], totalUsage: usage(1) },
+					{ ti: 2, tools: [tool('read')], totalUsage: usage(1) }
+				],
+				skills: ['paraglide', 'shadcn-svelte']
+			}),
+			record({
+				sid: 's2',
+				mod: 'openai/gpt-5',
+				turns: [{ ti: 0, tools: [tool('read')], totalUsage: usage(1) }],
+				skills: ['paraglide']
+			})
+		);
+		records.loaded = true;
+
+		const target = document.createElement('div');
+		mount(Dashboard, { target });
+		await awaitTick();
+
+		const text = target.textContent ?? '';
+
+		expect(text).toContain('claude-sonnet-4');
+		expect(text).toContain('gpt-5');
+		expect(text).not.toContain('anthropic/');
+		expect(text).not.toContain('openai/');
+
+		expect(text.indexOf('read')).toBeLessThan(text.indexOf('edit'));
+		expect(text.indexOf('edit')).toBeLessThan(text.indexOf('bash'));
+
+		expect(text).toContain('paraglide');
+		expect(text).toContain('shadcn-svelte');
 	});
 });
