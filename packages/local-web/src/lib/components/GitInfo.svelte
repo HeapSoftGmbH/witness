@@ -30,15 +30,10 @@
 				{repoName}
 			</a>
 			{#if branch}
-				<a
-					href={`${repoUrl}/tree/${branch}`}
-					target="_blank"
-					rel="noreferrer"
-					class="flex items-center gap-1.5 hover:text-foreground hover:underline"
-				>
+				<div class="flex items-center gap-1.5">
 					<RiGitBranchLine class="size-4 rotate-90" />
 					{branch}
-				</a>
+				</div>
 			{/if}
 		{:else}
 			<span class="flex items-center gap-1.5">
@@ -52,10 +47,23 @@
 				</span>
 			{/if}
 		{/if}
-		<span class="flex items-center gap-1.5">
-			<RiUser3Line class="size-4" />
-			{userName || 'Unknown'}
-			{#if userEmail}({userEmail}){/if}
-		</span>
+		{#if userName && repoUrl?.includes('github.com')}
+			<a
+				href={`https://github.com/${userName}`}
+				target="_blank"
+				rel="noreferrer"
+				class="flex items-center gap-1.5 hover:text-foreground hover:underline"
+			>
+				<RiUser3Line class="size-4" />
+				{userName}
+				{#if userEmail}({userEmail}){/if}
+			</a>
+		{:else}
+			<span class="flex items-center gap-1.5">
+				<RiUser3Line class="size-4" />
+				{userName || 'Unknown'}
+				{#if userEmail}({userEmail}){/if}
+			</span>
+		{/if}
 	{/if}
 </div>
