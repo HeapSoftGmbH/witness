@@ -13,40 +13,26 @@
 
 	import { ModelUsageChart, NameCountChart } from './components';
 
-	const countNames = (counts: Record<string, number>) =>
-		Object.entries(counts)
+	const countBy = (names: Iterable<string>): { name: string; count: number }[] => {
+		const acc: Record<string, number> = {};
+		for (const n of names) acc[n] = (acc[n] ?? 0) + 1;
+		return Object.entries(acc)
 			.map(([name, count]) => ({ name, count }))
 			.sort((a, b) => b.count - a.count);
+	};
 
 	const allTools = $derived(
-		countNames(
-			records.data.reduce<Record<string, number>>((acc, r) => {
-				for (const t of r.turns)
-					for (const tool of t.tools) acc[tool.name] = (acc[tool.name] ?? 0) + 1;
-				return acc;
-			}, {})
-		)
+		countBy(records.data.flatMap((r) => r.turns.flatMap((t) => t.tools.map((tool) => tool.name))))
 	);
 
 	const allModels = $derived(
-		Object.entries(
-			records.data.reduce<Record<string, number>>((acc, r) => {
-				acc[r.mod] = (acc[r.mod] ?? 0) + r.turns.length;
-				return acc;
-			}, {})
-		)
-			.map(([name, count]) => ({ name: getModelFromSourceString(name), count }))
-			.sort((a, b) => b.count - a.count)
+		countBy(records.data.flatMap((r) => Array<string>(r.turns.length).fill(r.mod))).map((m) => ({
+			...m,
+			name: getModelFromSourceString(m.name)
+		}))
 	);
 
-	const allSkills = $derived(
-		countNames(
-			records.data.reduce<Record<string, number>>((acc, r) => {
-				for (const s of r.skills ?? []) acc[s] = (acc[s] ?? 0) + 1;
-				return acc;
-			}, {})
-		)
-	);
+	const allSkills = $derived(countBy(records.data.flatMap((r) => r.skills ?? [])));
 
 	const stats = $derived([
 		{
@@ -62,18 +48,12 @@
 		{
 			label: 'Tools Used',
 			description: 'Number of distinct tools used.',
-			value: compactNumberFormatter.format(
-				new Set(
-					records.data.flatMap((r) => r.turns.flatMap((t) => t.tools.map((tool) => tool.name)))
-				).size
-			)
+			value: compactNumberFormatter.format(allTools.length)
 		},
 		{
 			label: 'Skills Used',
 			description: 'Number of distinct skills used.',
-			value: compactNumberFormatter.format(
-				new Set(records.data.flatMap((r) => r.skills ?? [])).size
-			)
+			value: compactNumberFormatter.format(allSkills.length)
 		}
 	]);
 </script>
