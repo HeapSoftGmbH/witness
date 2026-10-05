@@ -71,30 +71,36 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_ENV"
 
       - name: build release notes
-        run: |
-          PREFIX="${APP}-v*"
-          TAGS="$(git tag --sort=version:refname --list "$PREFIX")"
-          PREV="$(echo "$TAGS" | tail -n 2 | head -n 1)"
-          if [ "$PREV" = "$APP-v$VERSION" ]; then
-            PREV=""
-          fi
-          if [ -n "$PREV" ]; then
-            RANGE="$PREV..HEAD"
-          else
-            RANGE="HEAD"
-          fi
-          {
-            echo "## What changed in $APP v$VERSION"
-            echo
-            git log --no-merges --pretty=format:'- %s' "$RANGE"
-            echo
-          } > release_notes.md
+        id: changelog
+        uses: mikepenz/release-changelog-builder-action@aa013739bbc8e7067dbbecd4525ff11aeb51a84b
+        with:
+          mode: COMMIT
+          configurationJson: |
+            {
+              "template":
+                "## ${{ env.app }} v${{ env.version }}\n\n#{{UNCATEGORIZED}}",
+              "commit_template": "- #{{TITLE}}",
+              "categories": [],
+              "tag_resolver": {
+                "method": "semver",
+                "filter": {
+                  "pattern": "^${{ env.app }}-v(.+)$",
+                  "flags": "gu"
+                },
+                "transformer": {
+                  "pattern": "^${{ env.app }}-v(.+)$",
+                  "target": "$1"
+                }
+              }
+            }
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: create github release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64
         with:
           name: "${{ env.app }} v${{ env.version }}"
-          body_path: release_notes.md
+          body: ${{ steps.changelog.outputs.changelog }}
 
       - name: publish
         working-directory: apps/${{ env.app }}
