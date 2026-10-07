@@ -15,7 +15,7 @@ export const tool = (name: string): Tool => ({ name, isError: false });
 export const record = (
 	overrides: Partial<AgentTurnRecord> & { turns: AgentTurnRecord['turns'] }
 ): AgentTurnRecord => ({
-	t: '2026-01-01T00:00:00Z',
+	t: new Date().toISOString(),
 	sid: 's1',
 	sn: 'Session 1',
 	h: 'pi',

@@ -1,6 +1,15 @@
 import { describe, expect, test } from 'vitest';
 
-import { getModelFromSourceString, getRepoName, getRepoUrl } from './utils';
+import { getModelFromSourceString, getRepoName, getRepoUrl, isoDateNDaysAgo } from './utils';
+
+describe('isoDateNDaysAgo', () => {
+	test('subtracts n UTC days as YYYY-MM-DD, across boundaries', () => {
+		const d = new Date();
+		d.setUTCDate(d.getUTCDate() - 365);
+		expect(isoDateNDaysAgo(365)).toBe(d.toISOString().slice(0, 10));
+		expect(isoDateNDaysAgo(0)).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+	});
+});
 
 describe('getModelFromSourceString', () => {
 	test('extracts model from provider/model', () => {

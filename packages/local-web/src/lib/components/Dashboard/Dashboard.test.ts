@@ -78,6 +78,7 @@ describe('Dashboard', () => {
 		mount(Dashboard, { target });
 		await awaitTick();
 
+		for (const style of target.querySelectorAll('style')) style.remove();
 		const text = target.textContent ?? '';
 
 		expect(text).toContain('claude-sonnet-4');

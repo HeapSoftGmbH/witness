@@ -5,13 +5,23 @@
 		dollarNumberFormatterWith4Fracts
 	} from 'lib';
 
+	import DateRangePicker from '$lib/components/DateRangePicker.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 	import { records } from '$lib/stores/records.svelte.ts';
 	import { totalCost, totalTokens } from '$lib/usage';
-	import { getModelFromSourceString } from '$lib/utils';
+	import { getModelFromSourceString, isoDateNDaysAgo } from '$lib/utils';
 
 	import { ModelUsageChart, NameCountChart } from './components';
+
+	let range = $state({ start: isoDateNDaysAgo(6), end: isoDateNDaysAgo(0) });
+
+	const filtered = $derived(
+		records.data.filter((r) => {
+			const day = r.t.slice(0, 10);
+			return day >= range.start && day <= range.end;
+		})
+	);
 
 	const countBy = (names: Iterable<string>): { name: string; count: number }[] => {
 		const acc: Record<string, number> = {};
@@ -22,28 +32,28 @@
 	};
 
 	const allTools = $derived(
-		countBy(records.data.flatMap((r) => r.turns.flatMap((t) => t.tools.map((tool) => tool.name))))
+		countBy(filtered.flatMap((r) => r.turns.flatMap((t) => t.tools.map((tool) => tool.name))))
 	);
 
 	const allModels = $derived(
-		countBy(records.data.flatMap((r) => Array<string>(r.turns.length).fill(r.mod))).map((m) => ({
+		countBy(filtered.flatMap((r) => Array<string>(r.turns.length).fill(r.mod))).map((m) => ({
 			...m,
 			name: getModelFromSourceString(m.name)
 		}))
 	);
 
-	const allSkills = $derived(countBy(records.data.flatMap((r) => r.skills ?? [])));
+	const allSkills = $derived(countBy(filtered.flatMap((r) => r.skills ?? [])));
 
 	const stats = $derived([
 		{
 			label: 'Cost',
 			description: 'Total dollars spent in this repository.',
-			value: dollarNumberFormatter.format(records.data.reduce((n, r) => n + totalCost(r), 0))
+			value: dollarNumberFormatter.format(filtered.reduce((n, r) => n + totalCost(r), 0))
 		},
 		{
 			label: 'Tokens Used',
 			description: 'Total tokens used in this repository.',
-			value: compactNumberFormatter.format(records.data.reduce((n, r) => n + totalTokens(r), 0))
+			value: compactNumberFormatter.format(filtered.reduce((n, r) => n + totalTokens(r), 0))
 		},
 		{
 			label: 'Tools Used',
@@ -79,9 +89,17 @@
 	<Card.Header>
 		<Card.Title>Model Costs</Card.Title>
 		<Card.Description>Amount spent per model per day in dollars.</Card.Description>
+		<Card.Action>
+			<DateRangePicker bind:value={range} />
+		</Card.Action>
 	</Card.Header>
 	<Card.Content>
-		<ModelUsageChart value={totalCost} format={dollarNumberFormatterWith4Fracts.format} />
+		<ModelUsageChart
+			value={totalCost}
+			format={dollarNumberFormatterWith4Fracts.format}
+			{range}
+			records={filtered}
+		/>
 	</Card.Content>
 </Card.Root>
 <Card.Root class="mt-4">
@@ -90,7 +108,12 @@
 		<Card.Description>Total tokens used per model per day.</Card.Description>
 	</Card.Header>
 	<Card.Content>
-		<ModelUsageChart value={totalTokens} format={compactNumberFormatter.format} />
+		<ModelUsageChart
+			value={totalTokens}
+			format={compactNumberFormatter.format}
+			{range}
+			records={filtered}
+		/>
 	</Card.Content>
 </Card.Root>
 <div class="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-3">

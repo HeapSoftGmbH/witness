@@ -8,6 +8,13 @@ export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
 };
 
 /**
+ * ISO day (UTC, "YYYY-MM-DD") `n` days before today; `n = 0` → today.
+ */
+export function isoDateNDaysAgo(n: number): string {
+	return new Date(Date.now() - n * 86_400_000).toISOString().slice(0, 10);
+}
+
+/**
  * Extract model from the <provider>/<model> string
  * @param providerModel String provided by the witness tracking, format is <provider>/<model>
  * @returns returns the model from the string

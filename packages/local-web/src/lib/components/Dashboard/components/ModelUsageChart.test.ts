@@ -9,6 +9,29 @@ import ModelUsageChart from './ModelUsageChart.svelte';
 
 const awaitTick = () => new Promise((r) => setTimeout(r, 0));
 
+const lastWeekRange = () => {
+	const end = new Date();
+	const start = new Date(end);
+	start.setUTCDate(start.getUTCDate() - 6);
+	return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+};
+
+const mountChart = (target: HTMLElement) => {
+	const range = lastWeekRange();
+	mount(ModelUsageChart, {
+		target,
+		props: {
+			value: (r: AgentTurnRecord) => r.turns[0].totalUsage.tok,
+			format: (n: number) => String(n),
+			records: records.data.filter((r) => {
+				const day = r.t.slice(0, 10);
+				return day >= range.start && day <= range.end;
+			}),
+			range
+		}
+	});
+};
+
 describe('ModelUsageChart', () => {
 	test('mounts and renders an svg for a single record', async () => {
 		records.data.push(
@@ -21,13 +44,7 @@ describe('ModelUsageChart', () => {
 		records.loaded = true;
 
 		const target = document.createElement('div');
-		mount(ModelUsageChart, {
-			target,
-			props: {
-				value: (r: AgentTurnRecord) => r.turns[0].totalUsage.tok,
-				format: (n: number) => String(n)
-			}
-		});
+		mountChart(target);
 
 		// chart draws after the ResizeObserver reports a size (stubbed in setup)
 		await awaitTick();
@@ -54,13 +71,7 @@ describe('ModelUsageChart', () => {
 		records.loaded = true;
 
 		const target = document.createElement('div');
-		mount(ModelUsageChart, {
-			target,
-			props: {
-				value: (r: AgentTurnRecord) => r.turns[0].totalUsage.tok,
-				format: (n: number) => String(n)
-			}
-		});
+		mountChart(target);
 
 		await awaitTick();
 		expect(target.querySelectorAll('.lc-area-path').length).toBe(1);

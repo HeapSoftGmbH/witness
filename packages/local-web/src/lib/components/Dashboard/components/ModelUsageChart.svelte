@@ -3,12 +3,11 @@
 	import { curveMonotoneX } from 'd3-shape';
 	import { AreaChart, Tooltip, defaultChartPadding } from 'layerchart';
 	import { compactNumberFormatter } from 'lib';
-	import { SvelteDate } from 'svelte/reactivity';
 	import type { AgentTurnRecord } from 'witness';
 
 	import * as Chart from '$lib/components/ui/chart/index.js';
 	import { Skeleton } from '$lib/components/ui/skeleton';
-	import { records } from '$lib/stores/records.svelte.ts';
+	import { records as store } from '$lib/stores/records.svelte.ts';
 	import { getModelFromSourceString } from '$lib/utils';
 
 	// ISO date "YYYY-MM-DD" → "Apr 14" for x axis label
@@ -19,18 +18,23 @@
 	const formatDate = (iso: string) =>
 		new Date(iso).toLocaleDateString('en-US', { timeZone: 'UTC' });
 
-	let { value, format }: { value: (r: AgentTurnRecord) => number; format: (n: number) => string } =
-		$props();
+	let {
+		value,
+		format,
+		records,
+		range
+	}: {
+		value: (r: AgentTurnRecord) => number;
+		format: (n: number) => string;
+		records: AgentTurnRecord[];
+		range: { start: string; end: string };
+	} = $props();
 
 	// series per model, ordered alphabetically by model name
-	// only models with usage inside the 7-day window: an unused model would render as a flat zero line
+	// only models with usage: an unused model would render as a flat zero line
+	// records are pre-filtered to the date range by the caller
 	const models = $derived.by(() => {
-		const today = new SvelteDate();
-		const windowStart = new SvelteDate(today);
-		windowStart.setUTCDate(windowStart.getUTCDate() - 6);
-		const cutoff = windowStart.toISOString().slice(0, 10);
-		const totals = records.data.reduce<Record<string, number>>((acc, r) => {
-			if (r.t.slice(0, 10) < cutoff) return acc;
+		const totals = records.reduce<Record<string, number>>((acc, r) => {
 			acc[r.mod] = (acc[r.mod] ?? 0) + value(r);
 			return acc;
 		}, {});
@@ -54,26 +58,25 @@
 		) satisfies Chart.ChartConfig
 	);
 
-	// aggregate metric per calendar day (UTC, from ISO timestamp) per model, last 7 days, missing = 0
+	// aggregate metric per calendar day (UTC, from ISO timestamp) per model, missing = 0
+	// records are pre-filtered to the date range by the caller
 	const data = $derived.by(() => {
-		const byDay = records.data.reduce<Record<string, Record<string, number>>>((acc, r) => {
+		const byDay = records.reduce<Record<string, Record<string, number>>>((acc, r) => {
 			const day = r.t.slice(0, 10);
 			const dayCosts = acc[day] ?? {};
 			dayCosts[r.mod] = (dayCosts[r.mod] ?? 0) + value(r);
 			acc[day] = dayCosts;
 			return acc;
 		}, {});
-		const today = new SvelteDate();
-		return Array.from({ length: 7 }, (_, i) => {
-			const d = new SvelteDate(today);
-			d.setUTCDate(d.getUTCDate() - (6 - i));
-			const date = d.toISOString().slice(0, 10);
+		const days = Math.round((Date.parse(range.end) - Date.parse(range.start)) / 86_400_000) + 1;
+		return Array.from({ length: days }, (_, i) => {
+			const date = new Date(Date.parse(range.start) + i * 86_400_000).toISOString().slice(0, 10);
 			return { date, models: byDay[date] ?? {} };
 		});
 	});
 </script>
 
-{#if records.loaded}
+{#if store.loaded}
 	<Chart.Container config={chartConfig} class="h-75 w-full">
 		<AreaChart
 			{data}
